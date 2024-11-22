@@ -1,0 +1,25 @@
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.response import Response
+from rest_framework import status
+from .models import YourModel
+from .serializers import YourModelSerializer
+
+class YourModelListCreateAPIView(ListModelMixin, CreateModelMixin, GenericAPIView):
+    """
+    A view that provides GET (list) and POST (create) operations for YourModel.
+    """
+    queryset = YourModel.objects.all()
+    serializer_class = YourModelSerializer
+
+    def get(self, request, *args, **kwargs):
+        """
+        Return a list of all YourModel objects.
+        """
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Create a new YourModel object.
+        """
+        return self.create(request, *args, **kwargs)

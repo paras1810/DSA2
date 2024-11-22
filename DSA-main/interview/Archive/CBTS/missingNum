@@ -1,0 +1,19 @@
+#You have been provided with the list of positive integers from 1 to 20.
+# All the numbers from 1 to 20 are present except 11, and you must find 11.
+def find_num(lst):
+    sum=0
+    lst_sum = 0
+    for i in range(1, 21):
+        sum = sum+i
+    for x in lst:
+        lst_sum = lst_sum+x
+    return sum - lst_sum
+
+if __name__ == "__main__":
+    lst = []
+    for i in range(1, 21):
+        if i!=11:
+            lst.append(i)
+    x= find_num(lst)
+    print(lst)
+    print(x)

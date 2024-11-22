@@ -1,0 +1,529 @@
+Flask is WSGI
+• Web Server Gateway Interface toolkit
+• Jinja2 template engine
+• Minimalistic approach 
+• For smaller projects
+• Extensive ecosystem
+• Rapid development 
+• No Model Combine with SQLAlchemy 
+• Wrapper around werkzeug pure wsgi
+• Port 5000
+Django
+• Comprehensive features
+• Convention over configuration 
+• Strong community support
+• DTL Django Template Language
+• Scalability and resusability(DRY)don't repeat yourself
+• Full stack Web framework
+• Port 8000
+FastApi
+• Automatic API documentation openai swagger
+• Type Hint based Validation or Pydantic
+• Growing Community 
+• High performance 
+• Port 8000
+Depends upon pydantic models
+1. pip install fastapi
+2. pip install uvicorn 
+3. uvicorn main:app --reload
+4. from pydantic import BaseModel
+5. Pip install Jinja2 templates 
+6. Pip install pymongo
+7. Get bootstrap.com
+8. from fastapi import APIRouter
+9. from pydantic import BaseModel
+10. pip install python-multipart
+
+Create static and templates folder for serving templates
+
+from fastapi import FastAPI
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static", name="static")
+templates=Jinja2Templates(directory="templates")
+
+Queryset
+• Collection of data from Database. Built up as list of objects. By allowing data Filter and order at early stage
+• df.objects.all()
+• df.objects.all().values()
+• df.objects.values_list('columnname')
+• df.objects.filter(name__startswith='p').values()
+• df.objects.all().order_by('name',-'id').values()
+
+REST API Representational State Transfer
+to manage communication on complex network like Internet.
+Uses only HTTP requests Common http method get, post, put, patch, delete
+Guiding Principles:
+1. Uniform Interface: uniform way of interacting with given server for all client
+Identify by Uniform resource identifier.
+
+2. Stateless: REST mandates that server will not store anything related to Session Server should process and complete each Request independently.
+
+3. Cacheable: Response send by server should contain information regarding it cacheability.client should know whether this is cacheable or not.
+
+4.Client Sever Design Pattern: REST imposes client Server design Pattern which enforces separation of concern and help client and Server function independently.
+
+5. Layered System: Design your REST APIs with multiple Layer each having task such as security, business logic and application working together to fulfil client requests.
+
+Requests:
+Request Class extends HttpRequest giving support for request parsing and request Authentication.
+Request.data: return parsed content of Request body.
+Request.query_params synonym for request.get
+Request.parsers APIView class and @api_view use this.
+Request.user return instance of Django.contrib.auth.models.User
+.Method: returns uppercase string representation for http method.
+.content_type: returns media type of HTTP Request body
+.stream: stream Represent content of Request body
+
+Response:
+class subclass SimpleTemplateResponse
+Should use APIView or @api_view
+Response(data, status=None, template_name=None, headers=None, content_type=None)
+.data serialized data of response
+.status_code numeric status code
+.content rendered content of response
+ followed by .render()
+.template_name If HTMLRenderer accepted
+from rest_framework.response import Response
+
+• Views
+APIView which subclass Django View class
+• provide rest Request not Django HttpRequest
+• Provide rest Response not Django HttpResponse
+• Exception caught and mediated appropr
+• Authenticated and Throttle check
+Attribute and Methods
+• .renderer_classes .get_renderer(self)
+• .parser_classes .get_parsers(self)
+• .authentication_classes
+• .Throttle_classes
+• .permission_classes
+• .content_negotiation_class
+Policy implementation methods
+• .check_permissions(self,request)
+• .check_throttles(self, request)
+• .perform_content_negotiation(self, request)
+Class Based View
+Function Based View
+Available Decorators
+• @renderer_classes
+• @parser_classes
+• @authentication_classes 
+• @throttle_classes
+• @permission_classes 
+@api_view()
+def hello_world(request):
+
+Generic View:
+GenericAPIView extends APIView
+Basic:
+queryset: override get_querset method
+Serializer_class set attribute or override get_serializer_class
+lookup_field: defaults to pk Object lookup of individual instance
+Lookup_url_kwarg: if unset same Value as lookup_field
+Pagination:
+pagination_class DEFAULT_PAGINATION_CLASS
+
+ViewSets
+Combine logic related Views in single class called Viewset
+.list and .create .retrieve(request, pk) .update, .partial_update .destroy instead of .get and .Post Query.get
+Register with router class automatically determines urlconf
+Repeated logic into single class and need specify queryset once
+No longer need to deal wiring up url conf
+
+User_list=UserviewSet.as_view({'get':'list'})
+@action(detail=True, methods=['post', 'delete'])
+• Viewset inherits APIView can use Permission classes and authentication_classes
+• Not provide implementation of actions need to override and define explicitly
+• GenericViewSet Inherit GenericAPIView set of get_object, get_queryset
+• ModelViewSet Inherit GenericAPIView implementation of mixin(reusable code) classes
+• MVS provide action .list() .retrieve() .create .update .partial_update. Destroy 
+
+Routers
+Support Automatic url Routing and Consistent way of wiring your view logic to url.
+SimpleRouter
+Two mandatory prefix, viewset
+Ex: router.register(r'users', UserViewSet)
+users/, users/{pk}/
+Extra actions
+def set_password(self, request, pk=None)
+users/{pk}/set_password/
+DefaultRouter
+Same return response containing all list views
+
+Parser:
+request.data examine Content-Type
+DEFAULT_PARSER_CLASSES : rest_framework.parsers.JSONParser
+
+parser_classes = [JSONParser]
+@api_view(['POST'])
+@parser_classes([JSONParser])
+
+• JsonParser
+• FormParser
+• MultiParser
+• FileUploadParser
+Custom Parsers
+.parse(self, stream, media_type, parser_context)
+
+Rendor:
+In response
+.render(): .render(data, accepted_media_type, renderer_context).
+Using default_Renderer_Classes
+Class based view Inherit APIView or function based view using decorator @api_view
+.template_name 
+.accepted_renderer automatically set by APIView or @api_view before response returned from view. Instance used for render
+.accepted_media_type media type selected by content negotiation stage
+.renderer_context additional context information passed to renderer
+@renderer_classes([StaticHTMLRenderer])
+JSONRenderer
+TemplateHTMLRenderer
+StaticHTMLRenderer
+BrowsableAPIRenderer
+AdminRenderer
+HTMLFormRenderer
+MultiPartRenderer
+
+Parsing: Used to analyze and interpret code to understand structure and meaning
+Rendering: Process of generating visual representation of parsed data.
+
+Notes REST:
+1. Use noun instead of verb in url
+HTTP Method
+Safe Method: Get and head. Not change State of server.
+Idempotent Method: Put and Delete. Return same response everytime.
+1. GET: Retrieve data from server. 200 OK, 404 Not Found, 400 Bad Request.
+2. Post: Create new resource on server.request body carries data.201 Created, 204 No Content
+3. PUT: Can update existing resource by sending updated data as content.it replace s whole Collection.200 and 204 updated.
+4. Patch: it update data partially. 2xx 
+5. Delete:method delete a resource 200 status deleted 404 not found
+6. Head: similar to get not return response body 200 found
+7.Option: Get info about possible communication.
+8. Trace: For diagnosis purpose.
+9. Connect Method: method is for making end to end connection between client and Server.
+2. Well compiled documentation accepted OpenAPI or swagger
+3. Allow sorting, filtering and pagination
+
+Why JSON over XML and YAML?
+JSON Javascript Object notation
+YAML YAML ain't markup language
+XML extensible markup language
+1. Highly intuitive and most languages have pre-built function or libraries to parse and manipulate them.
+2. Framework use json as intermediary format to transfer data and provide converters and mappers to translate json into application native format 
+3. Popular language Python, Java, C++ have internals and external libraries that can read and write JSon data.
+4. XML use tag and store data in Tree like structure Json stored in key Value pair and Yaml allow both list or sequence format.
+5. XML support chart Images and Non primitive data types Json support only string number array boolean YaMl support complex data type such as date and time sequences nested and recursive values.
+6. XML is used for data interchange, Json is best for API in serialization format. YAML is suited for configuration.
+7. XML is bulky and slow while JSON is quickly parsed by Javascript engine YAML is superset of Json.
+
+Serializers
+• Complex data such as querset and Model instances to converted into native python datatypes such as json,xml. Also provide deserialization allowing parsed data to complex types.
+• Serializer to control output of responses and ModelSerializer that deal with Model instances and queryset
+from rest_framework import serializers
+class CommentSerializer(serializers.Serializer)
+  email=serializers.EmailField() content=serializers.CharField(max_length=200)
+
+serializer=CommentSerializer(comment)
+
+Deserialize
+data=JSONParser().parse(stream)
+.create or .update
+Comment.objects.create(**validated_data)
+.save create new instance or update existing
+
+validate data using is_valid before saving
+.errors provide all the errors
+• Field Level Validation:.validate_title .validate_<field_name> 
+• Object level validation: .validate()
+Validator
+score=serializers.IntegerField(validators=[multiple])
+.instance for initial data 
+Partial Comment(comment, data={"content":"foo"}, partial=True)
+Multiple Objects:
+serializer=BookSerializer(queryset, many=True)
+
+1. Modelserializer:
+• Generate fields for you
+• Generate Validations for you 
+• Default implementation of .create .update
+2. HyperlinkedModelSerialzer:
+Except it uses hyperlink to Represent relationship
+3. ListSerializer
+Same as pass many=True
+allow_empty default True
+max_length None
+min_length None
+4. BaseSerializer
+Alternative serialization
+Four method overriden
+.to_representation()
+.to_internal_value .create .update
+
+Serializer Fields
+Convention import serializers.<FieldName>
+Arguments to each field
+read_only default False
+write_only default False
+required default to true modelserializer False 
+default what is default value
+allow_null default None is not allowed
+source source="User.email"
+validators 
+error_messages
+label name of field
+help_text description of field
+initial pre_populate Value of html form fields
+Style how renderer should render input_type, base_template
+• BooleanFields
+• CharField max_len, min_len, allow_blank, trim_whitespaces
+• EmailField max_len, min_len, allow_blank
+• RegexField regex, max_len, min_len, allow_blank
+• SlugField regex [a-zA-Z0-9_-]
+• UrlField max_len min_len allow_blank
+• UuidField format='hex_verbose'
+• FilePathField path, match=None, recursive=False, allow_files=True, allow_folders=False, required=None
+• IpAddressField protocol="both" unpack_ipv4="both"
+• IntegerField
+• FloatField
+• DecimalField
+• DayeTimeField
+• DateField
+• TimeField
+• DurationField
+• ChoiceField
+• MultiChoiceField
+• FileField max_length allow_empty_files use_url
+• ImageField same as FileField
+• ListField
+scores=serializers.ListField(
+     child=serializers.IntegerField()
+)
+• DictField
+• HStoreField
+• JsonField binary encoder
+• ReadOnlyField
+• HiddenField
+
+Custom Serializer Field
+.to_Representation Convert initial datatype into primitive serializable
+.to_internal_value primitive datatype into internal python representation
+
+Authentication:
+Permission and throttling(control bandwidth) policy for request
+1. Request.user property typically set an instance of contrib.auth Package of Users class
+2. Request.auth property used for additional authentication information.
+3.Set using DEFAULT_AUTHENTOCATION_CLASSES
+for Basic and Session Authentication
+4. Also using APIVIEW class based view for perview or per-viewset basis.
+5. Also using @api_view decorator, @authenticated_classes @ permission_classes automatically set to .authenticators
+6. 401 Unauthorized, 403 Permission Denied
+7.Types
+• Basic Authentication: username, password 401
+•  Token Authentication manage.py migrate
+• Session Authentication Ajax clients 403
+• Remote User Authentication 
+• Custom Authentication
+from rest_framework import Permissions
+Permissions.IsAuthenticated
+Permissions.IsAuthenticatedOrReadOnly
+
+Permissions
+With Authentication and throttling Permission determine if access granted or not.Run at very start of view
+Simple IsAuthenticated
+Less restrict IsAuthenticatedOrReadOnly
+Permission fail Exception.PermissionDenied 403or Exception.NotAuthenticated 401
+Also support Object level Permission by overwriting .check_object_permissions
+
+class ReadOnly(BasePermission):
+   Def has_permission(self, request, view):
+       Return request.method in SAFE
+class ExampleView(APIView):
+    permission_classes  = [IsAuthenticated|ReadOnly]
+
+• AllowAny
+• IsAuthenticated
+• IsAdminUser
+• IsAuthenticatedOrReadOnly
+• DjangoModelPermissions
+• DjangoModelPermissionsOrAnonReadOnly
+• DjangoObjectPermissions
+
+CustomPermissions:
+Override BasePermission and implement
+.has_permission(self, request, view)
+.has_object_permission(self,request,view,obj)
+For instance level check
+.check_object_permissions(request, obj)
+
+Caching
+Can be used with other cache decorators such as cache_page, vary_on_cookie, vary_on_headers
+@method_decorator(cache_page(60*60*2)
+
+Redis 
+Key Value in memory DB with TTL time to Live 
+pip install django-redis
+Settings.py mention redis conf
+redis_instance = redis.StrictRedis(host=127.0.0.1, port=6379, db=1)
+cache.get(cache_key)
+cache.set(cache_key, serializer_data, timeout=60*60)
+• cache-aside or lazy loading after data requested
+• Write Through as soon primary DB updated
+Others memcached RabbitMQ
+
+Throttling
+Rate of Request that can be make like 60 request/min and 1000/day
+Using Default_Throttle_Classes
+from rest_framework.throttling import UserRateThrottle
+Use APIView or @api_view
+AnonRateThrottle
+UserRateThrottle
+ScopedRateThrottle
+Custom Throttle
+
+Filtering
+Simplest way to Filter queryset that subclass GenericAPIView to override .get_querset()
+Current User on based Request.user
+.query_params.get('username')
+Filter backends: DEFAULT_FILTER_BACKEN
+Add django_filters in Installed apps
+Search Filter class supports single Query parameter for searching
+^ instartwith 
+= iexact
+$ iregex
+@ search
+Ordering overriden with ORDERING_PARAM
+filter_backends  = [filters.OrderingFilter]
+
+Pagination
+Links that provided part of content response
+Included in response headers Content-Range Link
+Automatically in Generic View or viewsets
+Globally using DEFAULT_PAGINATION_CLASS and PAGE_SIZE
+• PageNumberPagination
+• LimitOffsetPagination
+• CursorPagination
+• Custom Pagination Style
+Override paginate_queryset(self, queryset, request, view=None)
+
+Versioning 
+request.version contain string correspond to version
+reverse ties in versioning scheme
+reverse('bookings-list', request=request)
+• NamespaceVersioning /v1/bookings/
+• QueryParameterVersioning /bookings/?version=1.0
+DEFAULT_VERSIONING_CLASS
+
+class ProfileList(APIView):
+versioning_class = versioning.QueryParmaterVersioning
+• AcceptHeaderVersioning
+• URLPathVersioning
+• NamespaceVersioning
+• HostNameVersioning
+• QueyParametetVersioning
+
+Returning URLs
+Return absolute url rather than Returning relative url
+Absolute functions
+reverse(viewname, *args, **kwargs)
+reverse_lazy(viewname, *args, **kwargs)
+
+Status Codes
+Informational - 1XX Provisional 
+Successful - 2XX
+Redirection - 3XX action needed
+Client Error - 4XX 
+Server Error - 5XX
+
+Testing
+• Validation data data types accurate
+• Functional intended task correctly
+• Ui graphical interface 
+• Load peak load
+• Runtime report runtime error
+• Security Authentication encryption 
+• Penetration cyber attack for security 
+• Fuzz check robust Error handling
+• Interoperability different System and platform
+
+Seeding
+Putting initial data or some Minimum data in database tables
+
+Aggregation
+Max, min, count
+That we apply on a column
+
+Django Project 1 Company
+1. Json Javascript Object notation: to send and receive data
+2. API Application program interface: Talk between two or more software
+3. HTTP Method: method to do crud operations in API
+4. django-admin startproject  company api
+5. python manage.py runserver
+6. python manage.py startapp api
+7. python manage.py makemigrations
+8. python manage.py migrate
+9. python manage.py createsuperuser
+• paras/parasrishabh username/password
+1. Code1 
+• from django.http import HttpsResponse, JsonResponse
+• return JsonResponse(friends, safe=False)
+
+Django Project 2 Leadwala
+
+Versions 
+Django 4.2.8-py3
+SQL parse 0.4.4-py3
+Asgi refb 3.7.2-py3
+Pip3 install djangorestframework
+pip3 freeze > requirements.txt
+
+Django Project 3 Social
+
+Django+Angular Project 4
+Install VS Code
+Install NodeJs
+npm -v
+npm install -g @angular/cli
+ng --version
+Install Python
+python
+python -m venv myenv
+myenv\Scripts\activate
+
+Dataframe to DB:
+1. df = df.to_dict('records')
+2. modelInstances = list(map(Lambda x: ModelName(**x), df))
+3.ModelName.objects.bulk_create(modelInstances)
+
+Requests 3,
+Responses 3,
+Views 3
+Generic Views 
+Viewsets 3
+Routers 3
+Parsers
+Renderers
+Serializers 3
+Serializer Field
+Serializer Relations----
+Validations--
+Authentication 3
+Permissions
+Caching
+Throttling
+Filtering 3
+Pagination 3
+Versioning--
+Content Negotiation--
+Metadata--
+Schemas--
+Format Suffixes--
+Returning URLs
+Exceptions--
+Status Codes 3
+Testing--
+Settings--
+
+Notes:
+Webhook an HTTP request triggered by event in source System and sent to destination System often with payload of data.
+Middleware framework of hooks into Django request/response processing. Light low level plug-in System for Globally altering Django I/O.
+Gunicorn: Protocol and standard communication between Web Server and Web application. Gunicorn webserver Django and Flask Web application. wsgi(Web Server Gateway Interface)is like Common language of communication.
+Mixins

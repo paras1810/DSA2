@@ -1,0 +1,243 @@
+String
+type() and isinstance() to check type var
+len()
+replace('a','b')
+map(int, input().split())
+Z=map(Lambda x,y,z:x+y+z,l1,l2,l3)
+Print(list(z))
+string_name.join(iterable)
+a=sorted(a)
+sorted(list,key=len,reverse=True)
+list.sort()
+string.upper()
+string.strip(list)
+string.translate(translate_map)
+list.sort(reverse=True,key=sortSecond)
+range(len(a)-1,0,-1)
+a.index(list_item,start,end)
+min(a,key=a.count)
+any,all
+
+Add in List
+lst.append(ele)
+lst.insert(1, ele)
+lst1.extend(lst2)//Use for tuple also
+Set={}
+thisset.add(ele)//set
+thisset.update(ele)//set
+
+Remove from List
+list.pop(index) default last
+list.remove(item)
+del list[index]
+List.clear()
+Lst.discard(ele) for set
+
+bin(n).count('1')
+zip(iter1,iter2,iter3......)
+Return min length iterator
+
+Regex
+import re 
+re.search("^The.*Spain$", txt)
+re.findall()
+re.split()
+re.sub()
+[a-m] set of character
+"he..o"  any character
+"^hello" Starts with
+"planet$" Ends with
+"he.*o" zero or more occurrence
+"he.+o" one or more occurrence
+"he.?o" zero or one occurrence 
+"he.{2}o" exactly number of occurrence 
+"falls|stays" either or
+
+Math
+math.sqrt(n)
+min
+max
+abs
+pow
+math.ceil(1.4)
+math.floor(1.4)
+math.pi
+
+with
+Helps in writing cleaner code management of common resources like File stream
+with open('file_path', 'w') as file:
+         file.write('hello world')
+Datetime
+X=datetime.datetime.now()
+Strptime:string to datetime datetime.strptime(date_string,format)
+Strftime: datetime to Object string
+date_string.strftime("format")
+
+Lambda
+Z=Lambda (x,y): x+y
+Z(x,y)
+filter(lambda item: item!=val, lst)
+Lst1 = filter(Lambda item:item!=4, lst1)
+import functools
+functools.reduce(lambda a, b: a+b, lis)
+
+List Comprehension:
+Newlist=[expression for item in iterable if condition==True]
+Lst = [ele for ele in list1 if ele!=9]
+
+Dictionary Comprehension:
+Dict = {k:v for (k,v) in zip(keys,values)}
+Dict ={
+X:{y: x+y for y in l}for x in l
+}
+
+Dunder Method
+Starting and ending with double underscore defined by built in class in python and used for operator overloading
+
+Pseudo Polynomial Time
+Appears to Polynomial but actually exponential or 2^x
+
+Take series of iterable and return 1 iterable
+from itertools import Chain
+     res = list(chain('ABC', 'DeF'))
+from Collections import Counter
+     list = [1,2,3,4,1,2,6,7]
+    cnt  = Counter(list)
+    print(cnt.keys(),cnt.values())
+import functools
+    functools.reduce(Lambda a,b: a+b,list)
+from Collection import defaultdict()
+Hash = defaultdict()
+From sys import maxsize
+
+from Collections import dequeue
+Operations are thread safe in Python
+q=deque()
+q.append(root)
+q.popleft()
+q.appendleft()
+q.pop()
+q.insert(2, 'c')
+q.remove("d")
+q.rotate()
+q.extend([3,4,5])
+q.extendleft([-1,-2])
+q.reverse()
+q.clear(), .count(), .copy()
+
+import queue
+q=Queue()
+q.qsize()
+q.empty()
+q.full()
+q.put(item, block=True, timeout=None)
+q.get()
+q.join()
+q.task_done()
+
+Advance Topics
+1. Multitthreading vs Multiprpcessing
+Import threading
+From threading import Thread, Lock, current_thread
+threading.Thread(target=method_name, args=(arg1, arg2)).start()
+threading.active_count()
+threading.current_thread()
+threading.Thread(group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None)
+1. start(): 
+2. run()
+3. t.join()
+4. t.name()
+5. t.getName()
+6. t.setName()
+7. ident
+8. is_alive()
+9. daemon
+10. isDaemon()
+11. setDaemon()
+
+Lock Objects
+threading.Lock
+1. acquire(blocking=True, timeout=-1)
+2. release()
+3. locked()
+
+Condition Objects:
+1. acquire()
+2. release()
+3. wait(timeout=None)
+4. notify(n=1)
+5. notify_all()
+
+concurrent.futures module
+class concurrent.futures.Executor Abstract Class
+1. submit(fn, /, *args, **kwargs)
+2. map(func, *iterables, timeout=None, chunksize=1)
+3. shutdown (wait=True, *, cancel_futures=False)
+• ThreadPoolExecutor
+class concurrent.futures.ThreadPoolExecutor(max_workers=None, thread_name_prefix='',initailaizer=None, initargs=())
+• ProcessPoolExecutor
+class concurrent.futures.ProcessPoolExecutor(max_workers=None, mp_context=None, initializer=None, initargs=(), max_tasks_per_child=None)
+• Future Objects
+Encapsulates asynchronous execution of callable. Created by Executor.submit()
+1. cancel()
+2. cancelled()
+3. running()
+4. done()
+5. result(timeout=None)
+6. exception(timeout=None)
+7. add_done_callback(fn)
+
+from multiprocessing import Pool, cpu_count
+num_cpu = max(1, cpu_count()-1)
+with Pool(num_cpu) as mp_pool:
+     res= mp_pool.map(square, com_list)
+
+q.join(): Block main thread until workers have processed everything inside queue
+2. Logging
+import logging
+logging.basicConfig(level=logging.info, format="%message)s")
+logging.info("Hello")
+
+• Debug: give detailed information 
+• Info: working as expected 
+• Warning: unexpected happen
+• Error: More serious problem
+• Critical: unable to running
+• .Log 
+• .exception
+• .addFilter
+• .removeFilter
+• .filter
+• .addHandler
+• .removeHandler
+• .hasHandler
+3. Memory Management
+4. File Manager
+5. Monkey Fixing in python
+6. Anaconda vs Miniconda
+Anaconda is larger and comes with a vast array of pre Installed packages while miniconda is smaller and only includes Conda and python.
+
+Creating QR Code
+Install Segno for QR code
+make_qr() function
+qrcode = segno.make_qr("Hello")
+qrcode.save("basic_qrcode.png", scale=5, border=0, light="lightblue", dark="darkblue",
+quiet_zone="light_grey")
+
+python basic_qrcode.py
+open basic_qrcode.png #on Command line
+
+Notes:
+• .update in dictionary merge content of two
+• Dict comprehension {val: k for k, Val in a.items()}
+• Filter function return type Filter
+• . Sorted function return list
+• *args stored as list
+• + operator is not overloaded in set
+• ^ operator in set return Common
+• thistuple  = ("apple",) # Comma importa
+
+MCQs
+1. print(2**3+(5+6)**(1+1))
+2. var=10
+     print(type(var))
