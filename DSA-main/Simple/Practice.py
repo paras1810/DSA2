@@ -1,29 +1,14 @@
-import multiprocessing
-import os
+from concurrent.futures import ThreadPoolExecutor
 
-
-class list:
-    def __init__(self, mylist):
-        print("I will be called")
-        self.data = mylist
-
-def square(n):
-    print("Worker process id for {0}: {1}".format(n, os.getpid()))
-    print("My name is{} and I am {} and line in{}".format("Paras", 25, "Delhi"))
-    return (n * n)
-
+def cube(n):
+    print(n*n)
 
 if __name__ == "__main__":
-    # input list
-    mylist = [1, 2, 3, 4, 5]
-    li = list(mylist)
-
-    # creating a pool object
-    p = multiprocessing.Pool()
-
-    # map list to target function
-    result = p.map(square, li.data)
-
-    print(result)
+    li = [4,5,6,7]
+    with ThreadPoolExecutor(max_workers=5) as ex:
+        ex.submit(cube, 2)
+        result = ex.map(cube,li)
+    for r in result:
+        print(r)
 
 

@@ -1,3 +1,4 @@
+#Product of all number except itself in arr[] of size n
 def productArray(arr, n):
     if n == 1:
         print(0)

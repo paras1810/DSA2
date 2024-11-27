@@ -1,4 +1,8 @@
-
+# Find maximum path sum
+# Node only 
+# Max path through Left Child + Node 
+# Max path through Right Child + Node 
+# Max path through Left Child + Node + Max path through Right Child
 class TreeNode:
     def __init__(self, data):
         self.data = data

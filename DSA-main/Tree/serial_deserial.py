@@ -1,3 +1,4 @@
+# Store the pre-order traversal and null pointer for no child
 class TreeNode:
     def __init__(self, data):
         self.data = data

@@ -11,6 +11,8 @@ print(x.__next__())
 for i in fib(10):
     print(i)
 
+#yield, x.__next__()
+#__iter__(), __next__(), 
 
 class ArrayList():
     def __init__(self, number_list) -> None:

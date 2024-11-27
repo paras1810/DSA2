@@ -6,6 +6,9 @@ def maxProfit(prices):
     for i in range(1, n):
         dp[i][0] = max(dp[i-1][0], -prices[i])
         dp[i][1] = max(dp[i-1][1], dp[i-1][0]+prices[i])
+    print(dp)
+    #[[-7, 0], [-1, 0], [-1, 4], [-1, 4], [-1, 5], [-1, 5]]
+    #Only one transaction: 6-1=5
     return max(dp[-1][0], dp[-1][1])
 
 if __name__ == "__main__":

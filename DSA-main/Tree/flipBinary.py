@@ -1,4 +1,8 @@
-
+# Flip binary tree towards right direction i.e clockwise
+# root->left->left = root->right
+# root->left->right = root
+# root->left = NULL
+# root->right = NULL 
 
 
 import queue

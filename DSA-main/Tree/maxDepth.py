@@ -1,3 +1,4 @@
+# Height of tree is number of edges from root to deepest node
 class Node:
     def __init__(self, data):
         self.data = data

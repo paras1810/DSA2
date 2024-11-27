@@ -1,3 +1,6 @@
+#arr[] of integers having n numbers
+#if target sum exist in array
+
 def printPairs(arr, arr_size, sum):
     hashmap = {}
     for i in range(0, arr_size):

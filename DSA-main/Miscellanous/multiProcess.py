@@ -11,7 +11,7 @@ def square(n):
     print("Worker process id for {0}: {1}".format(n, os.getpid()))
     return (n * n)
 
-
+#If we not use __main__ in Python on Windows OS it will went in infinite loop
 if __name__ == "__main__":
     # input list
     mylist = [1, 2, 3, 4, 5]

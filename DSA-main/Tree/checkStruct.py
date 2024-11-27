@@ -1,3 +1,4 @@
+#Check if two tree are identical in structure
 class newNode:
     def __init__(self, data):
         self.data = data
