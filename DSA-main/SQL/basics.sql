@@ -12,3 +12,9 @@ Select position, count(*) as num_employees
 from employees 
 group by position;
 
+SELECT *
+FROM employee_table
+WHERE employment_type = 'salaried'
+ORDER BY hire_date
+LIMIT 1 OFFSET n - 1;
+

@@ -17,3 +17,13 @@ if __name__ == "__main__":
     sentence = "Hello, world! How are you doing today?"
     reversed_sentence = reverse_words(sentence)
     print(reversed_sentence)
+
+# islower(): checks for lowercase.
+# isupper(): checks for uppercase.
+# isalpha(): checks if all characters are alphabetic.
+# isdigit(): checks if all characters are digits.
+# isspace(): checks if all characters are whitespace.
+# isalnum(): checks if all characters are alphanumeric.
+# istitle(): checks if string is in title case.
+# isnumeric(): checks if the string contains only numeric characters.
+# isidentifier(): checks if the string is a valid Python identifier
