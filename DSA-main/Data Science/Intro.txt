@@ -1,0 +1,73 @@
+Data (Raw Data + Pre-Processing + Data Cleansing)
+Jobs: Data Architect, Data Engineer, Database Administrator,
+Variety, Velocity, Variablity, Veracity
+    Traditional (Basic Customer, Historical Stock Price)
+        Data Collection
+            Pre-Processing
+                Class Labelling
+                    Numerical
+                    Categorical
+                Data Cleansing
+                Missing Values
+            Case Specific
+                Balancing
+                Shuffling
+            ER Diagram (Entity Relationship)
+            Relational Schema
+    Big (Social Media, Financial Trading)
+        Data Collection
+            Pre-Processing
+                Class Labelling
+                    Numerical
+                    Categorical
+                    Digital Images
+                    Digital Audios
+                    Digital Videos
+                Data Cleansing
+                Missing Values
+            Case Specific
+                Text Data Mining
+                Data Masking
+
+Data Science(Data + Model + Objective Function + Optimization Algorithm)
+Jobs: Data Scientist, Data Analyst, Machine Learning Engineer 
+    Business Intelligence (Price Optimization, Inventory Management)
+    Jobs: BI Analyst, BI Consultant, BI Developer
+    SWOT as Qualitative Analysis
+        metric (measure + business meaning)
+        KPI Key Performance Indicator
+        Report
+        dashboards
+    Traditional Methods (User Experience, Sales Forecasting)
+        Regression
+            Linear (y=bx)
+            Logistic
+        Clustering
+        Factor Analysis
+        Time Series
+    Machine Learning (Fraud Detection, Client Retention)
+        Supervised (Labelling + )
+            SVM Support Vector Machine
+            NN Neural networks
+            deep Learning
+            random forests
+            bayesian networks
+        UnSupervised
+            k-means
+            deep learning
+        Reinforcement (Reward System)
+
+Programming Language 
+    Python: All
+    R: All 
+    SQL: Traditional, BI 
+    Matlab: Traditional Data, BI, Traditional Data Science, Machine Learning
+    Java, Scala: Big Data, Machine Learning
+    Javascript, C, C++: Machine Learning
+Software
+    Excel: Traditional Data, BI, Traditional Data Science 
+    IBM SPSS: Traditional Data, Traditional Data Science
+    Hadoop , Apache HBase, mongoDB: Big Data 
+    PowerBI, sas, Qlikq, tableau: BI 
+    Eview, Stata: Traditional Data Science 
+    Microsoft Azure, rapidminer: Machine learning

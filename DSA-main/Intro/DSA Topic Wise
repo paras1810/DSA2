@@ -1,0 +1,23 @@
+1. Array and Strings, Two Pointers, Greedy
+Subarrarys, Maximum subarray sum, sliding window problems, string manipulation  
+
+2. Linked List
+Reverse a Linked list, cycle detection(Floyd), merge two sorted lists, intersection  
+
+3. Binary Tree and BST
+Tree Traversals(Inorder, Preorder, Postorder), lowest common ancestor, diameter of binary tree, balanced binary tree(AVL) Adelson-Velsky and Landis Tree, Segment Tree, Red-Black Tree
+
+4. Graph, Heap
+BFS, DFS, shortest path algorithm(Dijkstra, Floyd Warshall), topological sort, connected components
+
+5. Dynamic Programming
+Longest Increasing Subsequence, 0/1 knapsack, coin change, LCS(Longest Common Subsequence), matrix chain multiplication
+
+6. Stacks and Queues
+Implement a stack using queue, next greater element, balanced parentheses, largest rectangle in histogram
+
+7. Recursion and Backtracking
+N-Queens Problem, subsets, permutation, Sudoku Solver
+
+9. Bit Manipulation
+check if a number is power of two, count set bits, find the only non-repeating element
