@@ -18,3 +18,9 @@ WHERE employment_type = 'salaried'
 ORDER BY hire_date
 LIMIT 1 OFFSET n - 1;
 
+Select max(num) num from (
+Select num from mynumbers
+group by num Having count(num)=1
+) as unique_numbers
+;
+

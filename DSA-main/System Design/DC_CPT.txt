@@ -1,0 +1,38 @@
+
+--------------------------------------------------------------------------------------------
+                                        User<-------->DC-CPT Desktop App 
+                                                    (Build in swift, .c)
+                                                            |
+                                                            |
+                                                        Load Balancer(Below server are replicated thrice)
+                                                            |
+                                                            |
+                    Java Web Server(Spring App)<------------|
+                                        /\
+                                       /  \
+                                      /    \
+            |Python Web Server(Django App)   PL/SQL(Oracle SQL)
+                        |                \
+                        |                 \
+                    Python Queue Server    Cache(Redis)---->Logging, Metrics, 
+                            |                /
+                            |               /
+                            |              /
+                        Database(Oracle SQL)
+                        
+CI is leverage using Github and Jenkins pipeline.
+
+(BAU/NPI)
+Central Data 
+Actual Data 
+Upload
+View
+Delete
+Consolidate
+split
+
+Internal Services 
+Validation
+Autofilling
+Percentage Redistribution
+

@@ -1,0 +1,2 @@
+1. Non-Realtional and serialize, deserialize
+2. Dynamic content caching in CDN.

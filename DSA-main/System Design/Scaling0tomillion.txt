@@ -1,0 +1,222 @@
+Alex Xu: System Design Interview
+Martin Kleppmann: Designing Data Intensive Applications
+Key Words:
+    Rendering, Low Latency, Failover, Redundancy(Duplicating critical components), 
+    Availability(DB offline), Reliability(Disaster), Performance, Load/Response time, 
+    Persistent, Consistency, Loosely Coupled, Failure Resilient.
+
+Single Server Setup:
+    Web App 
+    Database
+    Cache
+
+Databases(5,6)<read, write, update--data>Web Server(3,4)<HTTP--HTML>User(Web, Mobile App)<IP--> DNS(1,2)
+Data Tier                                Web Tier
+
+User<--Public IP>Load Balancer<--Private IP>Web Servers1, Web Servers2 
+Slave Database<----reads>Web Servers<writes---->Master Database<----writes>Slave Database1, SDB2
+Web Server<--Cache<--Database
+             Cache Tier
+Producer<--------publish-->Message Queue<---subscribe----------consume-->Consumer
+Web servers                queue for photo processing          Photo processing workers
+
+UserA<--->CDN<--->Server
+UserB<----^
+
+                                                DNS<---User--->CDN
+                                                        |
+                                                    Load Balancer
+                                                    |           |
+                                                Geo-routed     Geo-routed 
+                                                    |           |
+    Web Servers1    Server2     Server3(Web Tier, Autoscale)---------------------------------------Message Queue---->Workers
+       \         /  \        |       /                                 |                     |
+        \       /    \       |      /                                  |                     |
+         \     /      \      |     /                                   |                     |
+    Master DB<-------------->Slave DB(Multiple)---------------Data--->Cache1, 2, 3           | 
+    (Data Tier)                                                 (Cache Tier)                 |
+                                                                                             |
+    Web Servers1    Server2     Server3(Web Tier, Autoscale)--------------------------------No SQL{}
+       \         /  \        |       /                                 |
+        \       /    \       |      /                                  |
+         \     /      \      |     /                                   |
+    Master DB<-------------->Slave DB(Multiple)-----------Data-->Cache 1,2,3------->Logging, Metrics, Monitoring, Automation
+    (Data Tier)                                                 (Cache Tier)
+
+
+
+    DNS(Domain Name System): User access websites through domian names. Paid services not hosted by our servers.
+    IP(Internet Protocol): Returned to web app or mobile app.
+    HTTP(Hyper Text Transfer Protocol): Request sent to our server.
+    HTML(Hyper Text Markup Language) or Json(Javascript Object Notation): Web server return response for rendering.
+    Web App: Server Side(Java, Python) and Client side(HTML, Javascript)
+    Mobile App: HTTP Protocol for communication and JSON for API response due to simplicity.
+
+Databases:
+    Relational Database: My SQL, PostGres, Oracle Database 
+        Store Data in tables and rows.
+        Joins are supported.
+    Non-Relational Database: CouchDB, Neo4J, Cassandra, Hbase, Amazon DynamoDB.
+        Four Forms:
+            Key-value Pair
+            Grap Store 
+            Column Store 
+            Document Store
+        Joins are generally not supported.
+    When Non-Relational: 
+        App require super low latency.
+        Data are unstructured. Don't have relational. 
+        Only need serialize and deserialize data. 
+        Store massive amount of data. 
+
+Scaling:
+    Vertical
+        scale up: meaning adding more cpu, ram to your servers.
+        Why Vertical?
+            Traffic is low and its simplicity.
+        Why not?
+            Hard Limit. Unlimited CPU and memory to single server impossible.
+            No failover and redundancy. One server down website goes down. 
+    Horizontal
+        scale out: adding more servers into your pool of resources.
+        Why Horizontal?
+            For large scale applications.
+
+Database Scaling:
+    Vertical:
+        Scaling by adding more CPU, RAM, DISK to existing machine.Powerful database and server store and handle lot of data.
+        Amazon RDS(Relational Database Service) get database server with 24TB ram.
+        
+
+
+Load Balancer:
+    Private IP: Reachable b/w servers in same n/w. Unreachable over internet. 
+    Solved no failover issue. Improved availability.
+Database Issue?
+    One DB does not support failover and redundancy.
+    Database replication is common technique.
+        Master DB support writes operation
+        Slave supports read operation and get copies from master DB.
+        Application require higher ratio of read and writes.
+        Benefits:
+            Better Performance: Read across distributed slaves. Improve performance allow more queries to processed in parallel.
+            Reliability: DB server destroyed by natural disaster. data is still preserved brcause of multi-location preservations.
+            High Availability: Website remain operational if DB get offline at one location.
+        Multi masters and circular replication for master got offline.
+        Only one slave is available and goes offline read operation directed to master.
+
+CDN (Content Delivery Network)
+    Geographically dispersed server used to deliver static content. To improve load/response time.
+    Static content(Javascript, CSS, image/video files) to CDN.
+    Note: Dynamic content caching enable caching of HTML pages based on request path, query string, cookies and request headers.
+    CDN servers nearest to user will deliver static content. 
+    If not in CDN it can request from origin(return HTTP header and TTL Time to live), which can be web server or storage like S3.
+    When to use?
+        Cost: CDN run by third party provider. Charged for data transfer in and out. Infrequently used asset no significance
+        Expiration policy: Same as Cache 
+        CDN fallback:If temp CDN outage client should detect problem and request resource from origin.
+        Invalidating Files: Invalidate CDN object using APIs provided by CDN vendor. 
+                Use object versioning for differ version image.png?v=2
+
+Cache:
+    Store result of expensive response or frequently accessed data in memory.
+    Application performance greatly affected by repeated DB calls.
+    Cache Tier:
+        Better system performance, reduce database workloads, ability to scale cache layer separate.
+        Read Through Cache: If response in cache return back to client, other it queries DB store in cache and return to client.
+        Interaction with cache simple: Cache servers provide API for common programming languages
+        Memcached APIs:
+            SECONDS = 1
+            cache.set('myKey', 'hi there', 3600*SECONDS)
+            cache.get('myKey')
+    When Cache?
+        Decide to use: Data read frequently but modified infrequently. It store in volatile memory. Not ideal for persisting
+                    Cache server restarts.All data erase so use persistent system.
+        Expiration Policy: No cache data remain in cache permanently. Not too short data reload frequently.
+                    Not too long data become stale.
+        Consistency: Keeping datastore and cache in sync. Maintaining consistency b/w data store and cache is challenging for multiple geo locations.
+        Mitigation Failures: Single cache may caused SPOF(Single point of failure). Multiple cache servers at differnet location to avoid spoof.
+                    Overprovision required memory by certain percentage. Provide buffer as memory usage increases.
+        Eviction Policy: Request to add item cache may caused existing item to removed. LRU(Least Recently Used) is most popular cache policy.
+                    Other are FIFO(First in First Out), LFU(Least Frequently Used).
+
+Stateless Web Tier:
+    Scaling web tier horizontally. Good practice to store data in persistent storage such as relational DB or NoSQL.
+    Each web server access state data from DBs. This is called stateless.
+    Stateless server keep no state information. More simpler, robust and scalable.
+    UserA, B----http request-->Web servers---fetch state-->Shared storage{}
+    Shared data store could be relational DB, Memcached/Redis, NOSQL. NOSQL is chosen as easy to scale.
+    Autoscaling means adding or removing servers automatically based on traffic load.
+    Improve availability and provide better user experience across wider geographical areas supporting multiple data centre is crucial.
+    
+Stateful architecture:
+    It remembers client data from one request to another.
+    UserA---(http request)->Server 1(session image and Profile image)
+    If http request will be routed to other server authentication will fail.
+    So every request should be mapped b/w same client and same server.
+    This is done by sticky notes by load balancer.
+    Adding or removing server is more difficult. Also challenging to handle server failures.
+
+Data Centers:
+    Users are geoDNS-routed also geo-routed to closest data center with a split of x% and 100-x%.
+    geoDNS is DNS service allow domain name to resolved IP addresses on location of user.
+    In event of data center outage we direct all traffic to healthy data center. US-west is offline all traffic 100% to US-east.
+    Technical Challenges:
+        Traffic Redirection: Tools to direct traffic to correct data centre. GeoDNS can direct traffic to nearest data centre.
+        Data Synchronization: Different user could have local DBs and caches. In failover cases traffic might be routed to data center where data is unavailable.
+            Common stratergy to replicate data across multiple data centers.
+        Test and Deployment: Important to test website application at different centres. Automation deployment tool to keep it consistent.
+
+Message Queue:
+    Decoupled different components of system so they can scale and reliable independently.
+    It is key strategy by many real world distributed system to solve this problem.
+    Make system more loosely coupled and failure resilient.
+    A durable component, stored in memory, that supports asynchronous communication.Serves as buffer and distributes asynchronous request.
+    Input service called Producers/Publishers, create message and publish them to message queue.
+    Other services Consumers/Subscribers connect to queue perform action define by messages.
+    Producer post message and consumer read message even if each other are unavailable. Both of these can scale independently.
+
+Logging, Metrics and Automation:
+    Logging:
+        Monitoring error logs is important because it helps to identify error and problems.
+        Can monitor at server level or use tools to aggregate them a centralized service for easy search and viewing.
+    Metrics:
+        Collecting different types of metrics help us to gain business insight and understand health status.
+        Types:
+            Host Level: CPU, Memory, disk I/O, etc.
+            Aggregated Level: Performance of DB Tier, cache Tier.
+            Key Business: daily active users, retention, revenue.
+    Automation:
+        System get big and complex, we need to build and levearge automation tool to improve productivity.
+        CI(Continuous integration) is good practice, code check in verified through automation, allowing team to detect problem early.
+        Automation your build, test, deploy process improve developer productivity.
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+

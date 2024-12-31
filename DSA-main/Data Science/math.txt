@@ -1,1 +1,53 @@
 Probability
+    0-1 A Event P(A): Probability 
+    p(A) = Preferred or Favourable/all or Sample Space
+    P(A and B) = P(A).P(B) independent
+    Expected Value: E(A) = p(a)*n
+    Numerical Outcome = E(X) = P(A).A+P(B).B+P(C).C
+Probability Frequency Distribution
+Events and Complements
+    A+AC=Sample Space A'
+    p(A)+P(B)+P(C) = 1
+    A' = B+C 
+    p(A') = 1-P(A)
+Combinatorics
+    Permutations (Arrange set of objects/all objects)
+        P(n) = n*(n-1)*....1 = n!
+        p(3)=6
+    Factorial
+        n! = n*(n-1)!
+    Variations (Arrange set of objects/not all objects)
+        V(n,p) = n^p n->total no of element, p->number of position
+        V(n,p) = n!/(n-p)!
+        V(10,3) = 720
+    Combinations (Select few objects)
+        C(10,3) = 120
+        C(n,p) = n!/p!(n-p)!
+        C=V/P
+        C(n,p) = C(n,n-p) i.e. p>n/2>n-p 
+    Variety Combinations    
+        a*b*c
+Bayesian Inference
+    Sets
+        Empty Set or Null Set-> No Value 
+        x belongs A or x in A or A conatins x
+        For all x in A: x is even
+        A is subset B 
+    Properties
+        Mutually Exclusive Sets: Never Touch. All complements are mutually exclusive.
+            A intersect B = 0, A union B = A + B
+        Intersect A union B  = A + B - A intersect B(Additive Law)
+        Completely Overlap A intersect B = B, A union B = A 
+        Dependent and Independent Sets:
+            P(A|B) = P(A intersect B)/P(B) ->Conditional Probability 
+            P(A|B) not = P(B|A)
+            P(A|B)*P(B) = P(A intersect B)(Multiplicative Law)
+    Baye's Law:
+        P(A|B) = P(B|A)*P(A)/P(B)
+        Use:
+            Medical Research
+            Business: Finding Candidate
+        Independent Event:
+            
+
+
