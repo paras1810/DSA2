@@ -1,0 +1,49 @@
+Important Numbers:
+    Power of 2 latency Numbers and availability numbers.
+    Power of 2:
+        Byte sequence of 8 bits. ASCII use one byte of memory.
+        Power 10, 20, 30, 40, 50-->KB, MB, GB, TB, PB.
+    Latency numbers:
+        L1 cache .5ns
+        Branch Mispredict 5ns 
+        L2 Cache 7ns
+        Mutex Lock/Unlock 100ns
+        Main memory 100ns 
+        Compress 1k byte with zippy 10us 
+        Send 2k over GBPS n/w 20us
+        Read 1 MB sequentially 250us
+        Round trip with same data centre 500us
+        Disk seek 10ms
+        Read 1MB sequentially from n/w or disk 10ms or 30ms
+        Send packet CA->Netherlands 150ms 
+        Points:
+            Memory is fast but disk is slow.
+            Avoid disk seeks
+            Single compression algo faster. Compress data before sending over internet.
+            Data centre are in diff region so take time.
+    Availability Numbers:
+        Service fall b/w 99% to 100%.
+        Cloud provider like Amazon, Google, Microsoft keep SLAs above 99.9%.
+        99%->3.65day/year, 99.9%-->8.77hour/year, 99.99% 52.60min/year, 99.999%-->5.26min/year, 99.9999-->31.56sec/year 
+Twitter QPS:
+    300 million monthly active users.
+    50% of user twit daily
+    User post two tweet per day.
+    10% contain media.
+    Data stored for 5 years.
+    Solution:
+        Query per second: 
+            Daily Active User=300million*50%=150million
+            Tweet QPS=150million*2tweet/24/3600=3500
+            Peek QPS=3500*2=7000
+        Estimate Media:
+            Average Tweet size=tweet_id+text+media=64bytes+140bytes+1MB
+            Media=150million*2*10%*1MB=30TB per day 
+            5year = 5*365*30TB=55PB
+Tips:
+    Rounding Numbers
+    Write down assumption
+    Label your unit
+    QPS, Peak QPS, storage, cache, number of servers
+
+

@@ -1,2 +1,35 @@
+Chapters:
+    Scaling0tomillion
+    BackofEnvelope
+    NewsFeeder
+    ratelimiter
+    consistenthashing
+    keyvaluestore
+    uniqueidgenerator-->url shortener
+    urlshortener
+    webcrawler
+    notificationsystem
+    newsfeedsystem
+    chatsystem
+    searchautocomplete
+    youtube
+    googledrive
+    learningcontinues
+
 1. Non-Realtional and serialize, deserialize
 2. Dynamic content caching in CDN.
+
+Gaurav Sen:
+    Stripe--Payment Fraud-->ResNext(CNN)--XGBoost with 15% cost
+    IndianRailways--8.5billlion-->IRCTC-->CRIS-->2 lkh crore
+    Uber-->1billion worth of Transaction-->Ledger Store O(n) read time-->Use Indexes-->2 Phase commit
+    Spotify(Recommend Music)-->Annoy Replaced by Vovyager-->Approximate Seach algoritm
+    Instagram-->140billion reels-->CDN-->Direct Server Return-->TULIP(Binary Serialize Protocol)-->QUIC(Streaming Support)
+    Whatsup-->1million connection on single server-->65356-->1/2TB RAM
+    Netflix-->100billion hours content/year-->Host their hard drives with Internet provider
+    Sports Channel-->Show ad on user preference
+    Whatsup-->100million calls-->VOIP instead of PSTN(Need entire line)
+    LinkedIn-->Connection among million of users-->1billion active users-->BFS is slow-->Use bi-directional BFS. Cache second degree of connection.
+    
+
+

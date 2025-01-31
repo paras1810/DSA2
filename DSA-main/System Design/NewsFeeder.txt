@@ -1,0 +1,74 @@
+4-step process for effective system design:
+
+                        DNS<----------------User(Web, Mobile)
+                                                |
+                                                |(v1/me/feed?content=Hello&auth_token={auth_token})
+                                                |
+                                            Load Balancer
+                                                |
+                                                |
+                                                |
+        Post Service<--------------------Web Servers(Authentication, Rate Limiting)------>Notification
+            |                                   |
+            |                                   |
+            |                             Fanout Service---------------get friend ids---->Graph DB 
+        Post Cache                              |       \
+            |                                   |        \
+            |                              Message Queue  \
+        Post DB                                 |          \get friends data 
+                                                |           \
+                                            Fanout Workers   \ 
+                                                |             User Cache--->User DB 
+                                                |
+                                            News Feed Cache 
+
+        DNS<---------------------------User(Mobile, Web)---------->CDN 
+                                       |            |
+                                       |v1/me/feed  |
+                                       |            |
+                                    Load Balancer   |
+                                        |           |
+                                        |           |
+                                    Web servers(Authentication, Rate Limiting)
+                                        |
+                                        |
+                                    News Feed Service---->User Cache---->User DB
+                                        |            \
+                                        |             \
+                                    News Feed Cache     Post Cache-->Post DB 
+Establish Design scope:(3-10 min)
+    Question to ask?
+        What specific feature going to built
+        How many user product have
+        How company scale up? Sale in 3, 6 and 12 months
+        What company tech stack? What existing service you leverage to simplify design 
+High Level Design and Buy in:(10-15 min)
+    Initial Blue Print of Design
+    Box Diagram such as client(mobile/web), APIs, web servers, data stores, cache, CDN, message queue.
+    Back of envelope calculation evaluate if blueprint fits constraints
+    Need to include database schema and API endpoints.
+Design Deep Dive:(10-25 min)
+    Like for URL shortener dive into hash function that convert long url into short one.
+    For a chat system how to reduce latency and support online/offline status.
+    Edge Rank algorithm of Facebook feed ranking not ideal as it take your precious time.
+Wrap Up:(3-5 min)
+    Error Cases(Server Failure, Network Loss)
+    Operation Issues. Monitor metrics and error logs.
+    From 1 million to 10 million users.
+
+New Feed Design:
+    Design Scope:
+        Mobile App or Web App 
+        To make post and see friend's news feed.
+        Feed sorted by reverse chronological order.
+        DAU(Daily Active User): 10 million user per 5000 friend
+        Contain media file both image and videos.
+    High Level Design:
+        Feed Publishing: Publish a post written into cache and DB. Post populated into friend new feed.
+            v1/me/feed?content=Hello&auth_token={auth_token}
+        News Feed Building: Built by aggregating friend post in reverse chronological order.
+            v1/me/feed 
+
+
+
+

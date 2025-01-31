@@ -86,8 +86,29 @@ Database Scaling:
     Vertical:
         Scaling by adding more CPU, RAM, DISK to existing machine.Powerful database and server store and handle lot of data.
         Amazon RDS(Relational Database Service) get database server with 24TB ram.
-        
-
+        Stackoverflow.com in 2013 had over 10 million monthly visitors but only one master DB.
+        Why not?
+            Hardware limits for large userbase single server is not enough. Powerful server are expensive.
+            Single point of failure.
+    Horizontal:
+        Also known as sharding. Large DB into smaller with all same schema and different data.
+        user_id%4 as shard function on id.
+        Sharding key: 
+            Consider of one or more column that determine how data is distributed.
+            Criteria is too choose key that distributes data evenly.
+        Complexity:
+                Resharding Data: 
+                    Single shard no longer hold data due to rapid growth.
+                    Certain shard feel shard exhaustion due to uneven data distributtion.
+                    Update shard function or Consistent Hashing require to resolve shard exhaustion.
+                Celebrity Problem:
+                    Hotspot Key Problem: Excessive access to specific shard.
+                    Katy Perry, Justin Bieber and Lady Gaga all end in same shard. That shard will overwhelmed with read operation.
+                    Need to allocate separate shard for each celebrity Sometime even further partition.
+                Join and denormalization:
+                    Hard to perform join operation across multiple servers
+                    Denormalize the database so query performed on single table.
+    Some of non-relational gunctionality can move to NOSQL data store to reduce data load.
 
 Load Balancer:
     Private IP: Reachable b/w servers in same n/w. Unreachable over internet. 
@@ -190,33 +211,13 @@ Logging, Metrics and Automation:
         System get big and complex, we need to build and levearge automation tool to improve productivity.
         CI(Continuous integration) is good practice, code check in verified through automation, allowing team to detect problem early.
         Automation your build, test, deploy process improve developer productivity.
-    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
+Points:
+    Keep web tier stateless.
+    Build redundancy at every tier.
+    Cache data as much as you can.
+    Support multiple data centres.
+    Host static data in CDNs.
+    Scale your data tier by sharding.
+    Split tier into individual services.
+    Monitor your system and use automation tools.

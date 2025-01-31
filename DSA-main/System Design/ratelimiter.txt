@@ -1,0 +1,109 @@
+Token Bucket:
+                                        Refiller
+                                            |
+                                            |
+                                        Bucket
+                        Request------>Enough Token------->Yes forward
+                                            |
+                                        Drop Request
+Leaking Bucket
+                                        Request  
+                                            |
+                                        Bucket Full--->queue--->processed at fixed rate
+                                            |
+                                            yes drop request 
+
+            
+Network system rate limiter used to control rate by client or service. Http world rate limiter limit number of client over period.
+    No more than 2post/sec.
+    10 account/day from same IP.
+    Reward no more than 5/week.
+    Benefits:
+        Prevent resource starvation caused by DOS(Denial of service)
+            Twitter limit tweets 300 per/3hour
+            Google Docs read request 300/60 sec
+        Reduce Cost:
+            Limiting number of calls reduce cost. 
+            For third party APIs: check credit, make payment, retrieve health records.
+        Prevent servers from overloaded: 
+            Filter out excess request caused by bots or users.
+
+Understand problem and Design scope:
+    Client side or Server side--->Server side rate limiter.
+    Throttle API request Basis: IP, User ID, Properties.
+    Scale of system: Large number of requests.
+    Distributed rate limiting Environment: Yes 
+    Informed users who are throttled: Yes 
+    Low Latency: Should not slow HTTP response time.
+    Less memory as possible. Exception Handling. High fault tolerance.
+
+Propose High Level Design and Get Buy in:
+    Where to put Rate Limiter:
+        Client Side Implementation: 
+            Easily forged by malicious actors. We might not have control over client Implementation.
+        Server Side Implementation:
+            Client-------------------->(API Servers(Rate Limiter))
+        Middleware Rate Limiter:
+            We create a middleware rate limiter, which throttle request to your API.
+            Client------->Rate Limiter------------->API Servers
+            Rate Limiter throttle extra request and return 429 indicates too many request.
+    Cloud Microservices:
+        In cloud rate limiting is implemented using API gateway.
+        Fully manage service support rate limiting, SSL termination, authentication, IP whitelisting, servicing static content.
+        Where to implement rate limiter:
+            Server side or Gateway: Depends on company current stack.
+                Evaluate current stack such as programming language and cache. Make it efficient to implement rate limiting on server.
+                Algorithm fits your business need, Server side full control third party gateway limited control.
+                If already using Gateway for IP whitelisting, authentication you may add rate_limiter also.
+                Building rate limiter service take time. If lack of engineering resource then commercial gateway is better option.
+                
+Algorithms:
+    Token Bucket:
+        Widely used, Used by internet companies. Both Amazon and Stripe used this.
+        Bucket has pre-defined capacity. Tokens are put at present rate periodically. Once bucket is full no more token added.
+        Each request consume one token, we check if enough token.
+            If enough token we take one token and request goes through.
+            If not enough token request dropped.
+            Bucket size 4, Refill rate 4/1min.
+            token_bucket(bucket_size, refill_rate): #maximum_token and token in bucket every sec.
+        How many bucket:
+            Different bucket for different API endpoint. User make 1post/seec, Add 150friend/day, 5post/sec. 3bucket are required.
+            Throttle request based on IP address, each require bucket.
+            System allow maximum of 10000request/sec then global bucket.
+        Pros:
+            Easy to implement. Memory efficient. 
+            Allow burst of traffic for short period. Go as long as token left.
+        Cons:
+            Challenging input parameters to tune bucket_size and refill_rate.
+    Leaking Bucket:
+        Similar to token bucket request are processed at fixed rate. Implemented in FIFO. Use in Shopify
+        Request arrive system check if queue is full. If not then request added. Other request dropped.
+        Request pulled from queue and processed at regular intervals.
+        leak_bucket(bucket_size, outflow_rate): Maximum token and token process at fixed rate.
+        Pros:
+            Memory efficient. Limited queue size. Suitable for stable outflow rate.
+        Cons:
+            Difficult to tune params. Burst of traffic fill queue and new request rate limited. 
+    Fixed Window counter:
+        Divide timeline into fixed sized window and counter for each window.Request increment counter by one.
+        Once counter reach pre-defined threshold, new request drop until new window start.
+        Between 2:00 and 2:01 five, 2:01 and 2:02 more five. But possible 2:005 and 2:015 ten request.
+        Pros:
+            Memory efficient. Resetting available quota at unit time fixed certain use case.
+        Cons:
+            Spike in traffic at edges allowed more request than quota.
+    Sliding window log algorithm:
+        Algorithm solved fixed counter issue. It keep tracks of request timestamp.Kept in cache such as sorted redis.
+        When new request came remove older timestamp older than current window.
+        Add timestamp of new request to log. If log size is lower or same than allow count then accept or reject.
+        Pros: Rate limiting by this accurate. IN rolling window request will not exceed rate limit.
+        Cons: Consume lot of memory because request rejected timestamp might still in memory.
+    Sliding Window Counter:
+        Hybrid approach combine fixed window counter and sliding window. Rolling min 70% and 30%.
+        Formuala: request in current window(3) + request in previous window(5) * overlap percentage(70%)
+        3 + 5*70% = 6.5 round to 6 
+        Pros: Memory efficent. Smooth spikes in traffic because rate based on average rate of previous window.
+        Cons: Works on not-so-strict look back window. Approx of actual rate because it assumes request in previous window evenly distributed.
+              Cloudflare only 0.003% request wrongly allow rate limited 400 million requests.
+
+High Level 
