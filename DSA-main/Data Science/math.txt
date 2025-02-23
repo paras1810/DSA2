@@ -48,6 +48,50 @@ Bayesian Inference
             Medical Research
             Business: Finding Candidate
         Independent Event:
+Distributions:
+    Y-Actual Outcome of event
+    y->One possible Outcome
+    P(Y=y)-->Probability function
+    Finite number of outcome, Infinite number
+    Two characteristics:
+        Mean: Its average value -> mu , sample_mean-> x_
+        Variance: How spread data -> sigma^2, sample variance-> s^2; measured in ^2 units.
+        Standard Deviation-> (s^2)^1/2 or s. +ve only 
+        sigma^2  = E(Y-mu)^2 = E(Y^2)-E(mu)^2
+    More congested middle of distribution more data fall b/w that interval.
+    Population Data: All the data 
+    Sample Data: Part of it
+    Discrete Distribution:
+        We can add probablity of value in range. 
+        P(Y<=y)=P(Y<(y+1))
+        Rolling a Die or Picking a card->Equiprobable or Uniform Distribution 
+            Uniform probablity: Both mean and variance are interpretable
+        When one trial and only two outcome-> Bernouli Distrbution
+            X~Bern(p)
+            s^2=p*(1-p)
+        Binomial Distribution: Sequence of identical Bernouli events.
+            X~B(n,p) n=number of events
+            p(y) = C(n,y)* p^y *(1-p)^(n-y)
+            s^2=E(y^2)-E(y)^2=n.p.(1-p)
+        Poisson Distribution: Frequency with which an event occur.
+            Y~Po(lambda)
+            P(Y)=lambda^y.e^-y/y! e=euler's number or(2.72)
+            E(y)=lambda= Both mean and s^2 called as elegant statistics.
+
+    Continuous Distribution:
+        Speed and Time: Probability distribution could be curve.
+        Normal Distribution:
+            Polar Bears->350 500 700. Extreme are outliers.
+        Student-Ts Distrbution:
+            Accomodate extreme value better. 
+        Chi-Squared:
+            Asymetric. Only consist of non-symmetric value.
+            Does't show real life. Used in Hypothesis testing. Goodness of fit.
+        Exponential Distribution:
+            Event rapidly changing on
+        Logistic Distribution:
+            Forecast Analysis. Never reach true certainity. How much game necessary to predict victory.
+
             
 
 

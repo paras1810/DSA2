@@ -1,0 +1,109 @@
+Introduction:
+    Each unique identifier stored as key with associated value. Pairing is key-value.
+    Key-value pair key must unique. Key can be plain texted or hashed value. Performance reason shorter key better.
+    Value can be string, lists, objects. Value is opaque object such as Amazon dynamo, Memcached, Redis etc. 
+    --put(key, value) //insert "value" associated 
+    --get(key) //get "value" associated.
+
+Design Scope:
+    Tradeoff read, write and memory usage. Another tradeoff b/w consistency and availability.
+    Size of key-value is small: 10Kb
+    Ability store big data.
+    High availability: responds quickly during failures.
+    High scalability: System can scale to support large dataset
+    Automatic Scaling: Addition and deletion of servers should be automatic.
+    Tunable consistency. Low Latency.
+
+Single server key-value store:
+    Intutive approach to store key-value in hash table, everything in memory.
+    Memory access is fast fitting everything in memory is not possible due to space.
+    Optimizations:
+        Data Compression
+        Store frequent data in memory and rest in disk.
+    Even single server will fill quickly need distributed key-value store.
+
+Distributed Key-Value Store:
+    Distribute key-value across various servers.
+    CAP(Capacity, availability, Partition Tolerance)
+    Not possible for distributed system to provide more than two of these at same time.
+    Consistent: All client see same data at same time no matter node.
+    Availability: Client which request data get response if some node are down.
+    Partition Tolerance: Indicate communication break between node. System continue to operate despite network partition.
+    Types of key-value:
+        CP: Support consistency and Partition Tolerance sacrifice availability.
+        AP: Support availability and Partition Tolerance sacrifice consistency.
+        CA: Support consistency and availability sacrifice Partition Tolerance.
+    N/w failure is unavoidable distributed system must tolerate n/w partition so CA system not exist in real life.
+
+Example:
+    Replicated on three nodes n1, n2, n3.
+    Ideal Situation:
+        Ideal n/w partition never occurs.n1 is automatic replicated to n2 and n3. Both consistency and availability achieved.
+    Real World Situation:
+        Partition can't be avoided and when partition occur choose b/w consistency and availability.
+        If n3 goes down and can't communicate with n1 and n2. Data become stale. (AP)
+        If we block write operation system become unavailable (CP)
+        Bank system are high consistent. If n/w cause inconsistency it will give error before inconsistency resolved.
+        If AP it will acceptd read and write and will sync once network partition is resolved.
+
+System Component:
+    Data Partition
+    Data Replication
+    Consistency 
+    Inconsistency Resolution
+    Handling Failures 
+    Systematic architecture Diagram
+    Write and Read Path.
+
+Key-Value store Based: Dynamo, Cassandra, BigTable
+
+Data Partition:
+    Simplest way to split data into small portions and store in multiple server.
+    Challenges:
+        Distribute data across multiple server.
+        Minimize data movement for node added or removed.
+    Consistent Hashing technique solve these problem.
+    Advantages of Consistent Hashing:
+        Automatic Scaling: Server could be added or removed on base of load.
+        Heterogeneity: Number of virtual nodes for server proportional to server capacity.
+
+Data Replication:
+    Achieve high availability and reliability data must replicate asynchronously over N servers
+    Key mapped to position on hash ring walk clockwise and chose first N server on ring to store data copies.
+    With virtual nodes first N nodes may be own by fewer N physical servers. To avoid we choose unique server while performing clockwise walk.
+    Better reliability replicas placed in distinct data centres connected through high-speed n/ws.
+
+Consistency:
+    Data replicated need to sync across replica. Quorum consensus guarantee consistency for both read and write.
+    N= Number of replicas. W= write quorum of size W, write operation acknowledged from W replicas.
+    R= Read quorum of size Read operation must wait for response from R replicas.
+    A coordinator act as proxy b/w client and nodes.
+    W, R and N is tradeoff b/w latency and consistency. 
+    IF W=1 or R=1 operation return quickly because coordinator need to wait for one replica. 
+    IF W or R> 1 system offer better consistency but query get slower because system need to wait for slower replica.
+    IF W+R>N strong consistency guarantee because of one read and write overlapping replica.
+    R=1, W=N Fast read; R=N, W=1 Fast Write
+    Coordinator--------------------put(key1, val1), ACK--------->S1
+
+Consistency Models:
+    Strong Consistency: Never seen out of data.
+    Weak Consistency: Not seen most updated value.
+    Eventual Consistency: Enough time all updates are propogated all replica are consistent.
+    Dynamo and Cassandra adopt eventual consistency recommended for our key-value model.
+    From concurrent writes eventual consistency allow inconsistent value to enter system and force client to read value to reconcile.
+
+Inconsistency resolution: Versioning or How reconcile work with Versioning:
+    Replication gives high availability but causes inconsistency.
+    Versioning and vector lock used solve inconsistency problem.
+    Versioning means treating each data modification as immutable version.
+    server1---------------------->n1(John)--sever1 change to JohnSanFransisco
+                                    |
+    server2--------------------->n2(John)--server2 change to NewYork
+    Conflicting version v1 and v2. No clear way to resolve conflict.
+    We need Versioning system that detect conflict and reconcile conflicts.
+    Vector clock is common technique to solve this problem.
+    
+
+
+
+

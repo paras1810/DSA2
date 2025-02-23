@@ -1,0 +1,61 @@
+Achieve horizontal scaling important to distribute request/data efficiently across servers.
+
+Rehashing Problems
+    n cache servers, common methods: serverIndex = hash(key)%N, N size of server pool.
+    key hash hash%4
+    Approach work well when size of server is fixed and data distribution is even.
+    Problem arise when new server added or server removed.
+    Most client will connect to wrong server when 1 goes down and we have to use N=3.
+    Consistent Hashing to mitigate this problem.
+
+Consistent Hashing:
+    Map server and key on ring using uniformly distributed hash function.
+    Go clockwise from key position until first server found.
+    When hash table resized only k/n keys need to remapped. k keys and n slots.
+    Hash space and ring:
+        SHA1 is hash function f goes from 0-2^160-1 all hash fall in this range. This hash space.
+        By connecting both end we get hash ring.
+    Hash servers:
+        Using same hash function f, we map server IP on ring.
+    Hash Keys:
+        Map cache key are onto the ring.
+    Server Lookup:
+        Going clockwise we can find which key will go for which server.
+    Add server:
+        Adding server require redistribution of fraction of keys.
+        Adding server 4 only key K0 need to redistributed. Other key not redistributed based on consistent hashing.
+    Remove server:
+        Only small fraction key require redistribution with consistent hashing. Server 1 removed key1 mapped to server 2.
+
+Two Problem:
+    Impossible to keep same size of partition on ring considering server can be added or removed.
+    Possible size of partition on ring is fairly small or large.If one server down size of partition got double.
+    2. It is possible to have non-distribute key distribution on ring.
+    Note: Virtual nodes or replica used to solve this problem.
+
+Virtual Nodes:
+    Virtual refer to real node, each server represent multiple virtual nodes. With virtual node each server responsible for multiple servers.
+    Edges with level S0 managed by server 0 and with S1 managed by server 1.
+    As number of virtual nodes increase distribution of key become more balance.
+    Standard deviation get smaller with more virtual nodes leads balanced data distribution.
+    SD b/w 5%(200 virtual nodes) and 10%(100 virtual nodes) of mean.SD smaller when increase number of virtual nodes.
+    More space needed to store info about virtual nodes. This is tradeoff and need to tune to fit requirements.
+
+Find affetcted keys:
+    Affected range to redistribute keys. If key is added or removed need to traverse clockwise or anti to find new server.
+
+Benefits of Consistent Hashing:
+    Minimize keys redistribute when added or removed. Easy to scale horizontally because data more evenly distributed.
+    Mitigate hotspot key problem: Excessive access to specific shard could cause server overload. 
+    Katy Perry, Justin Bieber, Lady Gaga all in same shard. This help to mitigate problem distributing data more evenly.
+    Real worlds Scenario:
+        Partition component Amazon Dynamo DB.
+        Data partitioning across cluster Apache Cassandra.
+        Discord chat app.
+        Akamai CDN.
+        Maglev Network load balancer.
+
+    
+
+
+        

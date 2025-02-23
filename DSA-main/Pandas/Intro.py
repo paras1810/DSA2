@@ -38,3 +38,20 @@ print(data_df.loc[['Cars2']])
 #df = pd.read_csv('file_name.csv')
 #df = pd.read_json('file_name.json')
 
+#students.grade = students.grade.astype(int)
+
+'''
++-------------+-----------+-----------+-----------+-----------+
+| product     | quarter_1 | quarter_2 | quarter_3 | quarter_4 |
++-------------+-----------+-----------+-----------+-----------+
+| Umbrella    | 417       | 224       | 379       | 611       |
+| SleepingBag | 800       | 936       | 93        | 875       |
++-------------+-----------+-----------+-----------+-----------+
+Melt in Pandas
+'''
+# pd.melt(report, id_vars=['product'], var_name='quarter', value_name='sales')
+
+# df.drop_duplicates('email')
+
+# students.rename(columns={'id':'student_id', 'first':'first_name','last':'last_name','age':'age_in_years'}, inplace=True)
+

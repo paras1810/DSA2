@@ -12,6 +12,15 @@ Leaking Bucket
                                         Bucket Full--->queue--->processed at fixed rate
                                             |
                                             yes drop request 
+High Level
+                    
+                                              Cache<---------Workers-->Rules
+                                            /
+                    Client-------->Rate limiter middleware-------Limit not reached--->API Servers 
+                          |                 |   \
+                          |                 |    \(fetch counter from redis)
+                           -----------------|     Redis
+                           429 too many request
 
             
 Network system rate limiter used to control rate by client or service. Http world rate limiter limit number of client over period.
@@ -106,4 +115,59 @@ Algorithms:
         Cons: Works on not-so-strict look back window. Approx of actual rate because it assumes request in previous window evenly distributed.
               Cloudflare only 0.003% request wrongly allow rate limited 400 million requests.
 
-High Level 
+High Level Architecture:
+    Rate limit algorithm is simple. High level need a counter how many request sent from same user, IP address. If counter large request disallow.
+    Using DB is slow due to disk access. In memory cache is fast and support time expiration. Redis is popular for rate limiting.
+    It is in memory store offer two command: INCR(increase count by 1) and EXPIRE(set timeout expire automatically deleted)
+
+Design Deep Dive:
+    Rate limiting rules and stored?
+        Lyft open source their rate limiting component.
+            domain: messaging
+            descriptors:
+                -key: message_type
+                Value: marketing
+                rate_limit:
+                    unit: day
+                    request_per_unit: 5
+    Handle request that rate limited 
+        Rate limited HTTP response code 429(too many requests)
+        HTTp response header take care of allowed remaining request before being throttled.
+            X-Ratelimit-remaining: Remaining number of request per window.
+            X-Ratelimit-Limit: How many call per window.
+            X-Ratelimit-Retry-After: Number of sec to wait making request again without throttled.
+        Rules stored on disk. Workers pull from disk and store in cache.
+        Client sent to server but go through middleware first. Middleware fetch from cache(counter, last request timestamp)
+    Rate limiter in Distributed System:
+        To support multiple servers and concurrent thread:
+        Challenges: 
+            Race Condition:
+                Can happen in highly concurrent environment. Two request simultaneously make counter from 3-->4 but it has to 5.
+                A possible solution is Lock but it significantly slow down system.
+                Other Lua Script and sorted set data structures in redis.
+            Synchronization Issue:
+                Another important factor in distributed system. For million of user one rate limiter server not enough to handle traffic.
+                As web tier is stateless, client send request to different rate limiter. Without Synchronization rate limiter 1 not known about client 2.
+                Solution:
+                    Use sticky session that allow client to send traffic to same rate limiter.
+                    Not advisable because of not scalable and flexible.Better to use centralized store like Redis.
+    Performnce Optimization:
+        Multi-Data center:
+            Latency is high for user far from data centers. Most cloud service provider build many edge server location sround world.
+            By 2020 cloudflare has 194 geographically distributed. Traffic is automatically routed to closest edge server.
+        Synchronize data with eventual consistency model.
+    Monitoring:
+        Rate limiter algorithm and rules are effective.
+            If rules are too restrict many valid request dropped.
+            Rate limiter been ineffective in traffic like flash sales. We can use token bucket.
+
+Wrap Up:
+    Hard and Soft Limiting 
+        Hard: Can't exceed threshold.
+        Soft: Can exceed for a short period.
+    Rate limiting different levels:
+        HTTP: 7th level, By IP address using IPTables(IP:layer 3), 
+        OSI Models layers(Open System Interconnected)
+        PDNTSPA: Physycal, Data , Network, Transport, Session, Presentation, Application
+
+
