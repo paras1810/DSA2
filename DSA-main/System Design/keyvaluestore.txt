@@ -101,7 +101,103 @@ Inconsistency resolution: Versioning or How reconcile work with Versioning:
     server2--------------------->n2(John)--server2 change to NewYork
     Conflicting version v1 and v2. No clear way to resolve conflict.
     We need Versioning system that detect conflict and reconcile conflicts.
-    Vector clock is common technique to solve this problem.
+    Vector Clock 
+        This is common technique to solve above problem.
+        It is (server,version) pair associated with data item. Check if version succed, preceed or conflict with each other.
+        It is represented by D([S1,v1], [S2,v2],....[[Sn,vn]]) where D is data, v1 is version counter, s1 is server number.
+            Increment vi if [Si, vi] exists.
+            Create a new entry [Si, 1]
+                                                                   |----Write by Sy--->D3([Sx,2], [Sy,1])------\
+    ---->Write by Sx--->D1[Sx,1]-----Write by Sx--->D1[Sx,2]-------|                                            ----Reconciled and written by Sx--->D5([Sx,3], [Sy,1], [Sz,1])
+                                                                   |----Write by Sz--->D4([Sx,2], [Sz,1])------/
+    Problems:
+        Vector clock add complexity to client because it need to implement conflict resolution logic.
+        [server, version] pair grew rapidly. Note: to fix this set threshold for length and if exceed limit remove oldest pair.
+        This can lead to inefficiences in reconcilation because descentant relation can't determine properly.
+        Based on Amazon Dynamo paper not yet encountered this in production it is acceptable solution for most companies.
+
+Handling Failures:
+    Large system at scale failure are not inevitable even common.
+    Failure Detection:
+        In distributed system it is insufficent to say server is down because other server say so.Two independent sources info confirm server down.
+        All to all multicasting is straightforward solution This is inefficent with many server in system.
+        Better solution for multicasting:
+        Gossip Protocol:
+            Each node maintain a node membership list containing memberid and heartbeat counters.
+            Each node sent heartbeat periodically to random node which in turn propogates to another set of node.
+            Once node receive heartbeat membership list is updated to latest info.
+            If heartbeat has not increased for predefined period member is considered offline.
+    Handling Temporary Failure:
+        After failure detected from gossip protocol system need to deploy certain mechanism to ensure availability.
+        In strict quorum approach read and write could be blocked.
+        Slopy Quorum to improve availability:
+            System choose first W healthy server for write and first R healthy for read. Offline server ignored.
+        If server is unavailable due to network or server failure, another server will process data Temporary.
+        When down server is up data is pushed back to achieve data consistency. This is called Hinted Handoff.
+    Handling Permanent Failures:
+        Anti-entropy protocol to keep replicas in sync for permanent failovers.
+        It involves comparing each piece of data on replicas and updating each piece to newest version.
+        Merkle Tree is used for inconsistency detection and minimizing amount of data transferred.
+        A hash tree or merkle tree is tree in which every non-leaf node is labeled with hash of labels or values.
+        Hash tree allow verification of content of large data structure.
+        Compare Merkle tree start with root then left and then right. Traverse tree to find which bucket are not synchronize and synchronize those bucket only.
+        Amount of data synchronize is proportional to difference b/w two data and not amount of data they contain.
+    Handling Data Center Outage:
+        Outage can happen due to power, network or natural disaster. Its important to replica centres across multiple data centres.
+        Even data centre is completely offline, still access data through other centres.
+    
+System Architecture Diagram:
+    Client-----------------(read/write)-------->n6-------------->n7, n0, n1, n2, n3, n4, n5
+          <--------------response-----------coordinator   
+    Client communicate key/value through simple API call get(key), put(key)
+    Coordinator act proxy b/w Client and key-value store.
+    Nodes are distributed on ring using consistent hashing.
+    System is decentralized so adding and removing nodes be automatic.
+    Data is replicated at multiple nodes. No single point of failure as every nodes has same set of responsibility.
+    
+    Node: (Client API, Failure Detection, Conflict resolution, Failure repair mechanism, Replication, Storage Engine).
+    Write Path:
+        Primary based on architecture of Cassandra. Write request directed to specific node.
+        
+                                        Server
+        Client---------write------------2------->Memory Cache 
+                                |                   |
+                                |                   |
+                    Memory      |1                  |
+                    Disk       Commit Log       SS Tables
+        Write Request is persisted on commit log file.
+        Data is saved in memory cache.
+        When memory cache is fulled data is flushed to SSTable on disk. Sorted String table is sorted key, value pair.
+    Read Path:
+        After read is directed to specific node it check in memory cache. If its their it returned to client.
+        If data not in memory we need to retrieve from disk instead. Efficient way to find which SSTable consist key, Bloom filter is used to solve problem.
+                                            Server
+        Client<-----------(read)-----------------1--------Memory Cache
+             |                                                   |
+             |                Memory                             |2
+             |                  Disk         SS Table            |
+                  5----------Result<----4---------------3-------Bloom Filter
+
+Summary:
+    Feature and Technique for distributed key-value store:
+        To Store Big Data: Consistent Hashing to distribute load across server
+        High Availability Read: Data Replication.Multi data center setup
+        High Available write: Versioning and Conflict resolution with Vector clock
+        Dataset Partition: Consistent Hashing
+        Incremental Scalability: Consistent Hashing
+        Heterogenity: Consistent Hashing
+        Tunable Consistency:Quorum Consensus 
+        Handling Temporary Failures: Sloppy Quorum and Hinted Handoff 
+        Handling permanent failure: Merkle Tree 
+        Handling Data Centre Outage:Cross Data Centre Replication
+
+
+
+        
+
+
+    
+
     
 
 

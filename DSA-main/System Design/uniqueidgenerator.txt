@@ -1,0 +1,69 @@
+Introduction:
+    Unique ID generator in distributed systems.
+    Auto increment does not work in distributed system because single DB server is not large enough.
+    Generating IDs across multiple DB with minimal delay is challenging.
+
+Design Scope:
+    Characteristic of Unique Id: ID must be unique and sortable.
+    New Record, ID increment by 1: ID increment by time not necessrily by 1. In evening should be greater than morning.
+    ID contain only numerical value: Yes 
+    ID length requiured: 64bit
+    Scale of system: 10k ids/sec.
+
+High Level Design:
+    Multi Master Replication:
+        My SQL------------(1,3,5)---------->Web Servers
+        My SQL------------(2,4,6)----------/
+        Approach uses DB auto_increment feature where next id we increase by K instead of 1.
+        Solve scalability issue because id can scale with number of DB servers.
+        Drawbacks:
+            Hard to scale with multiple Data centres. 
+            ID don't go up with time across multiple servers.
+            Not scale when server is added or deleted.
+    Universally unique identifier(UUID):
+        Web Server      WebServer
+        ID gen          ID gen 
+        128 bit number to identify information in computer systems.
+        Low probability of getting collision. Can be generated without coordination b/w servers.
+        1 billion UUID every sec for approx 100 years would single duplicate reach 50%.
+        Pros:
+            Generating UUId is simple. No coordination b/w system so no synchronize issue.
+            System is easy to scale because each server is responsible for generating ID they consume.
+        Cons:
+            ID are 128 bit we require 64 bit. Not go up with time. Could be non-numeric.
+    Ticket Server:
+        Flicker developed this method to generate distributed primary keys or unique ids.
+        Web Server  Web Server  Web Server 
+        \               |           /
+         \              |          /
+                    Ticket Server 
+        Use centralized auto_increment feature in DB server. Flickers Engineering Blog.
+        Pros:
+            Numerics Ids. Easy to implement and work for small and medium applications.
+        Cons:
+            Single point of failure: If ticket server goes down, all system depend will face issues. 
+            Avoid this can setup multiple servers. This introduce data synchronize challenge.
+    Twitter Snowflake approach:
+        Twitter id generation meet our requirement called snowflake.Divide and conquer. Divide ids into different sections.
+        0(1 bit) timestamp(41bits) datacenter ID(5bits) machine ID(5bits) sequence number(12bits)
+        Sign bit: Reserve future. Potentially distinquish signed and unsigned.
+        Timestamp: Millisecind since epoch .Twitter default 1288834974657
+        Datacenter ID: 5bits gives. 2^5-32 center.
+        Machine ID: 5bit gives 2^5=32 machines per datacenter.
+        Sequence Number: 12 bits For every ID generated on machine sequence number increment by 1. and reset to 0 every millisecond.
+
+Design Deep Dive:
+    Timestamp:
+        Most important 41 bits. As timestamp grows with time ids are sortable with time. Convert binary to UTC and vice versa.
+        Max Timestamp is: 2^41 which gives ~69 years.
+        After 69 years we need new epoch time or adopt other techniques.
+    Sequence Number:
+        2^12 which gives 4096 combinations. 0 unless more than 1 id is generated per millisecond. Machine can support max of 4096 new ids per millisecond.
+
+Wrap Up:
+    High Availability: Since ID generator is mission critical it must be highly available.
+    Section length tuning: Fewer sequence number and more timestamp bits effective for low concurrency and long term applications.
+    Clock synchronization: Assumption ID generation have same clock not might be true when server in multiple cores and multi machine schenarios.
+        Network Time protocol is solution for this.
+
+

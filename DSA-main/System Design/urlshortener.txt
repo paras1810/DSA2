@@ -1,0 +1,130 @@
+URL shortening service like tinyurl.
+Introduction:
+    URL: https://www.systeminterview.com/q=chatsystem&c=loggedin&v=v3&l=long 
+        Shorter: https://tinyurl.com/y7keocwj.
+        If you click on shorter it redirects to longer.
+    Traffic Volume: 100 million Urls/day.
+    Long shorten URl: As short as possible
+    Allowed characters: Num(0-9) and characters(a-z A-Z)
+    URLs deleted or updated:
+        No, 
+    1. URL shortening: Long URL=> return short URL
+    2. URL redirecting: Short URL=> redirect original URL.
+    3. High Availability, scalability and fault tolerance.
+
+Back of envelope:
+    Write Operation: 100 million URLs/day.
+    Per/sec=> 100million/24/60/60=1160.
+    Read operation: Assuming 10:1 read per sec: 1160*10=11600
+    For 10 years= 10*365*100million=365 billion records.
+    URL length=100
+    Storage for 10 years: 365billion*100bytes*10years=365TB
+
+High Level Design:
+    API Endpoints:
+        It facilitate communication between client and servers. APIs rest style.
+        1. URL shortening: POST request with one parameter: Original Long URL
+            POST api/v1/data/shorten 
+            request parameter: {longUrl: longURLString}
+            return shortURL
+        2. URL redirecting: GET request 
+            GET api/v1/shortUrl 
+            return longURL for HTTP redirection.
+    URL redirecting:
+        short URL: https://tinyurl.com/qt5opu 
+        long URL: https://www.amazon.com/dp/B017V4NTFA?pLink=643536829&ref=adpli13nvxx_0_2_im
+
+        Client--------------------(visit short URL)----------->tinyurl server 
+            <---------------------(status code: 301)-----------
+                                (location: long URL)
+            ----------------------(visit long URL)------------->Amazon server
+        301 redirect:
+            It means URL is permanently moved to long URL, Browser caches response and subsequent request for same URL 
+            will not sent to URL shortening. Request redirected to long URL server directly.
+            It is used to reduce server loads.
+        302 redirect:
+            It means URL is temporarily moved to long URL meaning subsequent request for same URL will be sent to URL 
+            shortening first. Then to long URL server.
+            Better choice for analytics like track click rate and source of click more easily.
+        Intuitive way to implement is using hash table. Stores <shortURL, longURL>pairs
+        > Get longURL: longURL = hashTable.get(shortURL)
+        > Once you get longURl, perform URL redirect.
+    URL shortening:
+        Short URL: www.tinyurl.com/{hashValue}. Hash function that maps long URL to hashValue.
+        longURL------------->Fx(hash)------------>shortURL.
+        Each long URL map to one hashValue.
+        HashValue can be mapped back to longURL.
+
+Design Deep Dive:
+    Data Model:
+        In high level everything is in hash table. Real world not feasible as memory resources are limited and expensive.
+        Better Option to store <shortURL, longURL> mapping in relational DB.
+        urlTable: PK(id), shortURL, longURL.
+    Hash Function:
+        To hash long URL to short, also known as hashValue.
+        HashValue consist of character [0-9,a-z,A-Z], has 10+26+26=62, smallest values of n 62^n>=365billion.
+        System support 365billion URLs based on back of envelope.
+        (62^1,2,3,4,5,6,7)=(62,3844,238328,14776336,916132832,56800235584,3.5trillion)
+        3.5trillion is more than enough hold 365billion URLs.
+        Types of hash function:
+            Hash+collision resolution:
+                To shorten longURL need a hash function hashes long URL to 7 character string. function like CRC32, MD5, SHA-1.
+                Shortest hash value CRC32 is also more than 7 char. How shorten?
+                Collect first 7 char of hash value which lead too collision. To resolve collision append string until no more collision discovered.
+
+                start------>input: longURL--------->hash function--------->shortURL-------------
+                                    |                                                           |
+                                    |                                                           |
+                                    |---------------longURL+predefined string<----yes-----exist in DB 
+                                                                                                |
+                                                                                                no 
+                                                                                                |
+                                                                                            save to DB 
+                                                                                                |
+                                                                                                End 
+                This is expensive as query to DB to check if shortURL exists.
+                Bloom filters can improve performance. It is space efficient probabilistic technique check if element is member of set.
+            Base 62 conversion:
+                Helps to convert same number in different representation. Base 62 used 62 possible char for hash value.
+                Let understand for 11157:
+                base-62 is 0-9, 10-a---35-z, 36-A----61----Z 
+                11157=2*62^2+55*62^1+59*62^0=[2,55,59]->[2TX] in base 62.
+                Short url: https://tinyurl.com/2TX.
+            Comparison:
+                Length fixed in (1). not fixed in (2)
+                Not need unique generator in (1). Need (2)
+                Collision is possible and resolved (1). Not possible(2)
+                Impossible to figure next short URL not depend on ID(1). Easy to figure out.
+    URL Shortening:
+        Base 62 conversion we are using in our design.
+        input longURL
+            |
+        longURL in DB----no--->Generate a new ID(Primary key) by unique id generator-->Convert ID to short URL(Base 62 conversion)---->Save ID, short URL, long URL in DB.
+            |
+            yes
+        return shortURL to client
+        Example:
+            https://en.wikipedia.org/wiki/Systems_design
+            Unique Id generator: 2009215674938.
+            Convert to Base62 "zn9edcu".
+            Save all 3 in DB.
+        We can use distributed unique id generator. Primary key is to generate globally unique ids.
+    URL redirecting:
+        As more reads than writes <shortURL, longURL> mapping in cache to improve performance.
+        User------Get(https://tinyurl.com/gdks)------->Load Balancer--------->Web Servers 
+                <--------Return longURL----------------------------                 /\
+                                                                            cache       Database
+                                                                        
+Wrap Up:
+    Rate Limiter: It helps to filter out requests based on IP address or filtering rules.
+    Web server Scaling: Web Tier is stateless, easy to scale web tier by adding or removing servers.
+    DB Scaling: Data replication and sharding.
+    Analytics: How many clicks and When do they click?
+    Availability, consistency, reliability: Core of any large system's success.
+    
+
+
+    
+
+
+
