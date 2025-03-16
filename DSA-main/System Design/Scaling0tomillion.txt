@@ -45,7 +45,7 @@ UserB<----^
 
 
 
-    DNS(Domain Name System): User access websites through domian names. Paid services not hosted by our servers.
+    DNS(Domain Name System): User access websites through domain names. Paid services not hosted by our servers.
     IP(Internet Protocol): Returned to web app or mobile app.
     HTTP(Hyper Text Transfer Protocol): Request sent to our server.
     HTML(Hyper Text Markup Language) or Json(Javascript Object Notation): Web server return response for rendering.
@@ -59,7 +59,7 @@ Databases:
     Non-Relational Database: CouchDB, Neo4J, Cassandra, Hbase, Amazon DynamoDB.
         Four Forms:
             Key-value Pair
-            Grap Store 
+            Graph Store 
             Column Store 
             Document Store
         Joins are generally not supported.
@@ -71,6 +71,7 @@ Databases:
 
 Scaling:
     Vertical
+        Server 500GB RAM+500GB RAM=1000GB
         scale up: meaning adding more cpu, ram to your servers.
         Why Vertical?
             Traffic is low and its simplicity.
@@ -78,6 +79,8 @@ Scaling:
             Hard Limit. Unlimited CPU and memory to single server impossible.
             No failover and redundancy. One server down website goes down. 
     Horizontal
+        Server1-500GB 
+        Server2-500GB
         scale out: adding more servers into your pool of resources.
         Why Horizontal?
             For large scale applications.

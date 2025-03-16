@@ -1,0 +1,247 @@
+Web Crawler also known as robot or spider.
+Introduction:
+    Used by search engine to discover new updated content on web. Content can be web page, image, video, PDF file etc.
+    Its start by collecting few web page and then follow link pages to collect new content.
+
+                                |-----------lime.com 
+                                |-----------peach.com 
+    a.com ----------------------|-----------mango.com 
+    b.com ----------------------------------banana.com 
+    c.com------------------------|----------orange.com 
+                                 |----------plum.com
+    Uses:
+        Search Engine Indexing: Crawler collects web pages to create local index for search engines. Googlebot is behind google search engine.
+        Web Archiving: Process of collecting information from web to preserve data for future. Many national libraries like US Library of congress and EU web archive.
+        Web Mining: Explosive growth of web presents unprecedented opportunity for data mining. 
+            To discover useful info from Internet. Ex: Top financial firms use web crawler to download shareholder meetings and annual report to learn key company initiatives.
+        Web Monitoring: Helps to monitor copyright and trademark infringements over internet. Digimarc use crawler to discover pirated work and reports.
+
+Design Scope:
+    1. Given sets of urls, download all web pages addressed by URLS.
+    2. Extract URLs from web pages.
+    3. Add new URLs to list of URLs to downloaded. Repeat these steps.
+    Requirements:
+        Use for search engine indexing, data mining, or something else: Search engine indexing.
+        Web/Pages per month: 1billion pages.
+        Conent types html, pdfs, images: HTML only.
+        Newly added or edited wen pages: Yes.
+        Need to store HTML web pages crawled: Yes upto 5 years.
+        Handle web pages with Duplicate content: We can ignore.
+    Non Functional Requirements:
+        Scalability: Web pages is large. Billions of web pages. Can be efficient using parallelization.
+        Robustness: Web is full of trap. Bad HTML, unresponsive servers, crashes, malicious link are common. Crawler must handle all cases.
+        Politeness: Crawler should not make too many request in short interval.
+        Extensibility: Flexible that minimal changes required to support new content types. If we want crawl images file, not need to redesign.
+
+Back of envelope:
+    1billion web pages/month.
+    QPS: 1/000,000,000/30/24/3600=~ 400pages/sec.
+    Peak QPS: 2*400=800pages/sec.
+    Average web pages size is 500K
+    1billion*500K=500TB storage per month. 
+    For 5years=500*12*5years=30 PB for 5 year content.
+
+High Level and Buy-In:
+    Based on studies of web crawler:
+                                        DNS Resolver                            Content Storage.
+                                            |                                       |
+        seed URLs-->URL Fronteir---->HTML Downloader---->Content Parser----->Content Seen?
+                        |                                                        /|\
+                        |                                  PNG Downloader     Link Extractor   WebMonitor
+                        |                                                        |            Extension Module
+                        |                                                    URL Filter 
+                        |                                                        |
+                        |---------------------------------------------------URL Seen?
+                                                                                 |
+                                                                            URL Storage
+    Seed URLs:
+        Used this as starting point for crawl process. General stratergy is to divide entire URLs space into smaller ones.
+        First approach based on countries. Each country has different popular websites.
+        Second based on topics: Shopping, Sports, healthcare. Its an open ended question.
+    URL Fronteir: 
+        Split crawl state into two: downloaded and already downloaded.
+        Component that stores URLs to downloaded called URL Fronteir. Refera as a FIFO.
+    HTML Downloader: 
+        Downloads web pages from internet.
+    DNS Resolver:
+        Download web page URL must be translated into IP. HTML Downloader calls DNS Resolver to get corresponding IP.
+        URL www.wikipedia.org convert to IP 198.35.26.96.
+    Content Parser:
+        After downloaded web page need to parsed and validated as malparformed web pages could provoke problems and waste storage.
+        Implementing content parser in crawl server slow down crawling process.
+    Content Seen:
+        29% web pages are duplicate content which may store duplicate content.
+        To eliminate data redundancy and shorten processing time. Help to detect new content previously stored in system.
+        Compare two HTML char by char is slow and time consuming, when there are billions of pages.
+        Efficient way is to compare hash value of two web pages.
+    Content Storage:
+        Storage system for storing HTML content. Depends on factors such as data_type, data_size, access frequency, life span e.t.c.
+        Both disk and memory are used.
+            Most in disk because data is too big to fit in memory.
+            Popular content in memory to reduce latency.
+    URL Extractor:
+        It parses and ectract link from HTML pages.
+        Relative path are converted to absolute URLs by adding "https://en.wikipedia.ord" prefix.
+    URL Filter:
+        It excludes certain content types, file extensions, error links and URLs in blacklisted sites.
+    URL Seen?
+        This data structure keeps track of URLs that are visited before or already in Frontier.
+        It helps to avoid infinite loop and adding same URL that can increase server load.
+        Bloom Filter and hash table are common technique to implement this. 
+    URL Storage:
+        Stores already visited URLs.
+
+Design Deep Dive:
+    Depth-First-Search(DFS) vs Breadth-First search(BFS):
+        Web act as directed graph where page serve as nodes and hyperlinks URLs edges. Crawl process can seen as traversing directed graph.
+        These two are commonly traversal choice. DFS is not good choice because it is very deep.
+        BFS is commonly used web crawlers and implemented in FIFO. URLs are dequeued in order they enqueued.
+        Problems:
+            1. Most links from same web page linked to same host. All links in wikipedia are internal links.
+               It makes crawler busy processing URLs from same host.
+               When crawler tries dowmload web pages in parallel wikipedia will flood with request. It is consider impolite.
+            2. It not take priority of URL in consideration. Web is large and not all page have same quality and importance.
+               So we want priortize URLs according to page rank, web traffic, update frequency.
+    URL Fronteir:
+        It stores URLs to be downloaded. It ensures politeness, URL prioritization and freshness.
+        Noteworthy papers are:
+        Politeness:
+            Web crawler avoid sending too many request to same hosting server within short period. It consider impolite or even treated denial-of-service(DOS).
+            Without any constraints crawler send 1k/sec same website. This overwhelm web servers.
+            General idea for enforcing politeness to download one page at time from same host. Delay can be added b/w two download tasks.
+            Politeness constraints implemented by maintain a mapping from hostnames to download(worker) threads.
+            Downloader thread has separate FIFO queue and download URL from queue.
+                                                Queue Router------------->Mapping Table 
+                                               /|\
+                                               /|\
+                                            b1  b2 b3
+                                            \   |   /
+                                            Queue Selector
+                                                /|\
+                                    Worker1    Worker2    Worker3 
+            Queue Router: Ensures that each queue (b1,b2,...bn) only contain URLs from same host.
+            Mapping Table: Map host to queue. FIFO queues b1,b2,bn conatin URLs from same host.
+                wikipedia.com               b1 
+                apple.com                   b2 
+            Queue Selector: Worker thread mapped to FIFO queue. Only downloads URLs from that queue.
+            Worker thread 1toN: It downloads web pages one by one from same host. Delay can be added b/w two download tasks.
+        Priority:
+            Random post on discussion forum about Apple carries different weight than post on Apple home page.
+            Both have "Apple" keyword, sensible crawler crawl Apple home page first.
+            Prioritize URLs based on usefulness measured by PageRank, website traffic, update frequency. This component handle URL prioritization.
+                                        Input URLs
+                                            |
+                                        Prioritizer    (Takes URLs as input and compute priority)
+                                            /|\
+                                    f1      f2      fn (Queue with high priority select higher probability)
+                                            \|/
+                                        Queue Selector (Random choose queue with bias for high priority)
+                                            |
+                                        Output URLs 
+        URL Frontier and two modules:
+            Front queue: manage prioritization.
+            Back queue: manage politeness
+                                        Input URLs
+                                            |
+                                        Prioritizer
+                                           /|\
+                                        f1  f2  fn 
+                                           \|/
+                                        Front queue Selector
+                                            |
+                                        Output URL 
+                                            |
+                                        Back queue router------------->Mapping Table 
+                                           /|\
+                                        b1 b2 bn 
+                                           \|/
+                                        Back queue selector 
+                                           /|\
+                                        WT1 WT2 Worker Thread N 
+        Freshness:
+            Web pages constantly added, deleted and edited. Web crawler must periodically recrawl downloaded pages keep data refresh.
+            Recrawl all URLs is time consuming and resource intensive.
+            Stratergy to optimize freshness:
+                Recrawl web page update history
+                Prioritize URLs and recrawl important pages first and more frequently.
+            Storage for URL Fronteir:
+                Real world number of crawls in frontier could be hundred of millions.Putting everything in memory is neither durable nor scalable.
+                Everything in disk is undesirable because disk is slow and can easily bottleneck for crawler.
+                Hybrid approach: Majority URL stored on disk, so resolve storage problem.
+                    Reducing problem of cost of reading from disk and writing disk, maintain buffer memory for enqueue/dequeue operations. 
+                    Buffer data periodically written to disk.
+    HTML Downloader:
+        Downloads web pages from internet using HTTP protocol. Look Robots Exclusion protocol first.
+        Robots.txt:
+            Also called Robots Exclusion Protocol, standard used by website to communicate with crawlers.
+            Specify what pages crawler allowed to download. Before crawl website check robots.txt and follow its rules.
+            To avoid repeat downloads cache results of file. File saved to cache periodically.
+            Example from https://www.amazon.com/robots.txt Directories like creatorhub disallowed for Google bot.
+            User Agent: Googlebot 
+            Disallow: /creatorhub/*
+            Disallow: /rss/people/*/reviews
+            Disallow: /gp/pdp/rss/*/reviews 
+        Performace optimization:
+            Distributed crawl:
+                For high performace, crawl jobs distributed into multiple servers, each server run multiple threads.
+                URL space partitioned into smaller pieces, each downloader responsible for subset of URLs.
+                    URL Fronteir----------distributed URLs-----HTML Downloader 
+                                \---------distributed URLs-----HTML Downloader
+            Cache DNS Resolver:
+                This is bottleneck for crawler because DNS request might take time due to synchronous nature of many DNS interface.
+                It response time ranges from 10ms to 200ms. Once request to DNS is carried out by crawler, other thread blocked until first request completed.
+                DNS cache to avoid calling DNS frequently is effective way for speed optimization.
+                It keeps domain name to IP address mapping and update periodically by cron jobs.
+            Locality:
+                Distribute crawl servers geographically. When crawl servers closer to website hosts crawler experience faster download time.
+                Design locality apply most system components: crawl servers, cache, queue, storage.
+            Short timeout:
+                Some web servers respond slowly or may not respond at all. Avoid long wait time, maximal wait time specified.
+                If host does not respond within predefined time, crawler stop job and crawl other pages.
+        Robustness:
+            Consistent Hashing:
+                Help to distribute among downloaders. New downloader server can be added or removed using consistent hashing.
+            Save crawl states and data:
+                Guard against failures, crawl state and data written to storage system. Distributed crawl can restarted easily by loading saved state and data.
+            Exception Handling:
+                Error are inevitable and common in large scale system. Handle excaption gracefully without crashing system.
+            Data Validation:
+                Important measure to prevent system errors,
+    Extensibility:
+        Design goal to make system flexible support new content types. Crawler can be extended by plugging new modules.
+        PNG Downloader module pluggedin to download PNG files.
+        Web monitor is added to monitor web and prevent copyright and trademark infringements. 
+    Detect and avoid problematic content:
+        For prevention of redundant, meaningless, or harmful content.
+        Redundant content:
+            Nearly 30% web pages are duplicates. Hashes or checksums help to detect duplication.
+        Spider Traps:
+            A web page that causes crawler in infinite loop. An infinite deep directory is below:
+                www.spidertrapexample.com.foo/bar/foo/bar/foo/bar/foo.....
+            Can be avoided by setting maximal length of URLs. No one size fits all solution exists to detect spider traps.
+            Website with spider trap easy to identify due to unusually large number of web pages discovered on websites.
+            It hard to develop automatic algorithm to avoid spider traps.
+            User can manually verify and identify spider trap, excludes those website from crawler or apply some customized URL filter.
+        Data Noise:
+            Some content have little or no value, such as advertisements, code snippets, spam URLs.
+            Those content are not useful for crawler and should excluded if possible.
+
+Wrap Up:
+    Server side rendering:
+        Website use scripts like JavaScript, AJAX to generate link on fly.
+        If download and parse web pages directly, not able to retrieve dynamically generated links.
+        Solve we perform server side rendering(called dynamic rendering) before parse.
+    Filter out unwanted pages:
+        With finite storage capacity and crawl resources, anti-spam component beneficial in filtering out low quality and spam pages.
+    Database replication and rendering:
+        Used to improve data layer availability, scalability, and reliability.
+    Horizontal scaling:
+        For large scale crawl, hundred or even thousand of server needed to perform download tasks. Key is to keep server stateless.
+    Analytics:
+        Collecting and analyzing data are important parts of system because data is key ingredient for fine-tuning.
+
+
+
+
+
+

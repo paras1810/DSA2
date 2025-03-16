@@ -1,0 +1,2 @@
+Oracle logical SQL is PL/SQL.
+MS SQL Server is TSQL.

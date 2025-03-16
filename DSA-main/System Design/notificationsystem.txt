@@ -1,0 +1,198 @@
+A notification alerts user with important information like breaking news, product updates, events, offerings.
+It is more than just mobile push notification.
+Three types of notification formats:
+    mobile push notification, SMS message, and Email.
+Building scalable system that sends millions of notification a day.
+
+Design Scope:
+    Types of system: Push notification, SMS message, and email.
+    Real-time system: Soft real-time. User to retrieve notification asap. If system is under high workload, slight delay acceptable.
+    Support Devices: iOS devices, android devices, and laptop/desktop.
+    Triggers Notification: Triggered by client application. Also scheduled on server-side.
+    User opt-out: Yes 
+    Notification each/day: 10 million mobile push, 1 million SMS, 5 million emails.
+
+High Level and Buy-In:
+    Different types of notifications:
+        iOS push notification:
+            Provider---------->APNs------------->iOS.
+            Primary components to send iOS push notification:
+                Provider:
+                    It builds and sends notification request to APNS. Construct push notification below data:
+                        Device Token:Unique identifier for sending push notification.
+                        Payload: JSON dictionary contains notification payloads.
+                        {
+                            "aps":{
+                                "alert":{
+                                    "title": "Game",
+                                    "body": "Bob want play chess",
+                                    "action-loc-key": "Play"
+                                },"badge":5
+                            }
+                        }
+                APNS: Remote service by apple to push notification to iOS devices.
+                iOS Device: End client, which receives push notifications.
+        Android push notification:
+            Similar to iOS use Firebase Cloud Messaging(FCM) instead of APNs.
+            Provider-------------->FCM------------>Android 
+        SMS Message:
+            Third party service like Twilio, Nexmo and others.
+        Email:
+            Can setup own email servers, many of them opt out for commercial service. Sendgrid and Mailchimp most popular 
+            email services which offer better delivery rate and data analytics.                    
+    Contact info gathering flow:
+        For notifications we need mobile device tokens, phone numbers, or email address. When user install our app or sign up first 
+        time API server collect info and store in DB.
+        User----(app install or sign up)-----Load Balancer---->API Servers-----(store info)--->DB
+        User Table: Email Addresses and Phone Number.
+            user_id bigint
+            email varchar
+            country_code integer
+            phone_number integer 
+            created_at timestamp
+        Device Table: Device Tokens
+            id bigint 
+            device_token varchar 
+            user_id bigint 
+            last_logged_in_at timestamp 
+        User can have multiple devices, indicating push notification to all user devices.
+    Notification sending/receiving flow:
+        High Level Design:
+            Service1---\                         /------APNs---->iOS 
+            Service2---- Notification System------------FCM----->Android 
+                .                                       SMS Service-->SMS 
+            Servicen----/                        \------Email Service---->Email 
+        Service 1 to N:
+            Service can be micro-service. cron job, or distributed system that trigger notification send events.
+            Ex: Billing service sends email to remind customer of due payment, shopping website tells customer package will delivered tomorrow via SMS messages.
+        Notification system:
+            It is centerpiece of sending/receiving notifications. For starting only one notification server used.
+            Provides APIs for services 1toN and build notification payload for third party services.
+        Third Party services:
+            Integrating third party services, need to pay attention on extensibility. 
+            Extensibility means flexible system can easily plugging or unplugging of third party services.
+            Another thing is Third party service might unavailable in new markets in future.
+            Like FCM is unavailable in China. Alternative third party such as Jpush, PushY used.
+        iOS, Android, SMS, Email:
+            User recieves notification.
+    Problems Identified:
+        Single point of failure(SPOF): Single notification server.
+        Hard to Scale: Handles everything related to push notification on one server.
+            Challenging to scale DBs, caches, and different component separate.
+        Performace Bottleneck:
+            Processing and sending notification can be resource intensive.
+            Ex: Construct HTML pages and waiting response from third party services could take time.
+            can result in system overload during peak hours.
+    
+High Level(Improved):
+    Move DB and cache out of notification server.
+    Add more notification servers and set up automatic horizontal scaling.
+    Message queue to decoupled system components.
+        Service1-----------\                 /-------iOS PN -------Workers-----APNs 
+        Service2            \               /
+        Service3                Notification---------Android ------Workers-----FCM 
+            |                /      servers ---------SMS queue-----Workers-----SMS service  
+        Servicen------------/           |   \
+                                      Cache  \
+                                        |     \------Email queue---Wrkers------Email Service 
+                                        DB 
+    Notification servers:
+        Provide APIs for services to send notifications. Only accessible internally or verified client to prevent spams.
+        Carry basic validations to verify emails, phone numbers.
+        Query DB or cache to fetch data needed to render notification.
+        Put notification to message queue for parallel processing.
+        Example of API send email:
+            POST https://api.example.com/v/sms/send 
+            Request Body:
+                {
+                    "to":[
+                        {"user_id": 123456}
+                    ],
+                    "from":{
+                        "email": "from_address@example.com"
+                    },
+                    "subject": "Hello, World!",
+                    "content":[
+                        {
+                            "type": "text/plain",
+                            "value": "Hello, World!"
+                        }
+                    ]
+                }
+    Cache:
+        User info, device info, notification templates.
+    DB: Store data about user, notification, settings.
+    Message queues:
+        Remove depedencies b/w components. It serve as buffer when high volume of notifications sent.
+        Each is assigned with distinct message queue so outage in one third-party service will not affect notification types.
+    Workers:
+        List of servers that pull notification events from message queues and send them to corresponding third-party services.
+
+Design Deep Dive:
+    Reliability:
+        How to prevent data loss?
+            One important thing is it cannot lose data. Notifications can usually be delayed or re-ordered, but never lost.
+            To satisfy this notification data persists in a DB and implement retry mechansism. Notification log DB is included for data persistence
+                iOS PN----->Workers-------->APNs
+                                |
+                            Notification log 
+        Will recipients receive notification exactly once?
+            No, delivered exactly once most of time, distributed nature could result in duplicate.
+            Reduce duplicate occurence, introduce dedupe mechanism and handle each case.
+            Dedupe Logic:
+                When notification arrives first, we check it seen before by checking event ID.
+                If seen before discarded. Otherwise send out notification.
+    Additional components and considerations:
+        Notification template:
+            A large notification system sends millions of notifications per day, many of these follow same format.
+            Templates introduced to avoid building every notification from scratch. This is performatted notification to create 
+            unique notification by customizing parameters, styling, tracking links. Ex template push notifications.
+            BODY: You dreamed of it. We dared it. [ITEM NAME] is back-only until [DATE]
+            CTA: Order Now. Or, Save My [ITEM NAME]
+            Benefits of notification template include maintaining consistent format, reducing margin error, and saving time.
+        Notification setting:
+            Generally user receive so many notification and feel overwhelmed.
+            Websites give fine-grain control over notification settings. Information stored in notification setting table.
+            user_id bigint,
+            channel varchar,
+            opt_in boolean. Before sending notification we check if user opt-out.
+        Rate Limiting:
+            When third party fails notification add to message queue for retrying. If problem persists, alert sent out to developers.
+        Security in push notifications:
+            For iOS or Android: appkey or appSecret used to secure push notifications APIs.
+            Only authenticated or verified clients allowed to send notifications using our APIs.
+        Monitor queued notifications:
+            Key metric to monitor is total number of queued notifications.
+            If number is large, notifications events not processed fast enough by workers. To avoid delay notification delivery, more workers added.
+        Events Tracking:
+            Notification metrics, such as open rate, click rate, engagement are important customer behaviors.
+            Analytics service implement event tracking. Integration b/w notification system and analytics service is usually required.
+                                                               /---click 
+                start---->Pending----->sent------deliver-------
+                            \/                                 \-----unsubscribe
+                            error
+    Updated Design:
+
+                                |------send pending---->Analytics Service<-----------------click trracking----
+                                |                                      retry|             |                  |
+        Service N-------->Notifiction Servers(Authentication/Rate Limit)-----iOS PN----->Workers---->APNs--->IOS
+                                |                                                           /\
+                              Cache                                             Notification    Notification  
+                                |                                                  Template     Logs
+                                DB 
+        Notification server with two critical feature: authentication and rate-Limiting
+        Also add retry mechanism handle notification failures.If system fails put back in message queue and workers will try for pre-defined number of times.
+        Notification template provide consistent and efficient notification creation process.
+        Monitoring and tracking system added for system health checks and future improvements.
+
+Wrap Up:
+    Reliability:
+        Proposed a robust retry mechanism to minimize failure rates.
+    Security: AppKey/appSecret to ensure only verified client send notifications.
+    Tracking and monitoring: Any stage of notification flow to capture important stats.
+    Respect user settings: User may opt-out. System check user setting before sending notifications.
+    Rate limiting: Users appreciate frequency capping on number of notification received.
+
+
+
+

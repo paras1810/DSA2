@@ -51,6 +51,8 @@ Melt in Pandas
 '''
 # pd.melt(report, id_vars=['product'], var_name='quarter', value_name='sales')
 
+# weather.pivot_table(index='month', columns='city', values='temperature', aggfunc='max')
+
 # df.drop_duplicates('email')
 
 # students.rename(columns={'id':'student_id', 'first':'first_name','last':'last_name','age':'age_in_years'}, inplace=True)
