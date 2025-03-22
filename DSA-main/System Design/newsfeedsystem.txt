@@ -1,0 +1,125 @@
+According Facebook "News feed constantly updating list of stories in middle of your web page".
+It includes status updates, photos, videos, links, app activity, and likes from people, pages and groups you follow on facebook.
+Similar Facebook news feed, Instagram feed, Twitter timeline, etc.
+
+Design Scope:
+    Mobile App, Web App: Both
+    Important features: User can publish post and see her friends posts on news feed page.
+    Order of post: Reverse chronological, Particular order such as topic scores, Post from close friends have higher scores: 
+        For simple feed is sorted reverse chronological order.
+    Friends: 5000
+    Traffic: 10 million DAU 
+    Feed contain Images, videos or text: Can contain media files, including both images and videos.
+
+High Level Design and Buy-In:
+    Feed Publish: User publish post, data written into cache and DB. Post populated to her friends news feed.
+    Newsfeed Building: News feed publish aggregating post reverse chronological order.
+    APIs:
+        Newsfeed APIs:
+            Primary way for client communicate with servers.HTTP based that allow client perform actions.
+            Includes posting status, retrieval news feed, adding friends.
+        Feed Publishing:
+            Publish post HTTP POST request sent to server.
+            POST /v1/me/feed
+            PARAMS: content: text of post, auth_token: used to authenticate API requests.
+        NewsFeed retrieval:
+            GET /v1/me/feed/
+            PARAMS: auth_token: Used to suthenticate API requests.
+    Feed Publishing:
+        DNS<-------------User(Web browser, Mobile App) v1/me/feed?content=Hello&auth_token={auth_token}
+                                |
+                                |
+                            Load Balancer 
+                                |
+                            Web Servers Authentication/Rate Limiting(redirect traffic to different internal services)--->Notification(inform friend new  content is available)
+                               /|\
+                Post Service  Fanout--------get friend ids---->Graph DB  
+                    |           |\
+                    |           | \----------------get friends data----->User Cache----->User DB
+                Post Cache      |
+                    |          Message Queue
+                POST DB         |
+                               Fanout Workers
+                                |
+                                |
+                            News Feed Cache  
+    NewsFeed Building:
+        DNS<--------------User(Web Browser, Mobile App) v1/me/feed/----------->CDN
+                                |
+                            Load Balancer
+                                |
+                            Web Servers(Authentication/Rate Limiting)
+                                |
+                            News Feed Service--------->User Cache-------->User DB 
+                                |\
+                                | \------------------>Post Cache------->POST DB
+                                |
+                            News feed Cache 
+
+Deep Dive:
+    Feed Publishing:
+        Web Servers:
+            Communication with clients, enforce authentication and rate-limiting(prevent spam and abusive content).
+        Fanout Service:
+            Two types:
+                Fanout on write(also called push model):
+                    News feed is pre-computed during write time. Post delivered to friends cache immediately after publish.
+                    Pros:
+                    Generated in real time. Fetching news feed fast because news feed pre-computed during write time.
+                    Cons:
+                    User has many friends, fetching friend list, generating news feed for all slow and time consuming. Called hotkey problem.
+                    For inactive users those rarely login, pre-computed waste computing resources.
+                Fanout on read(called pull model):
+                    Generated during read time. On-demand model. Recent post pulled when user loads home page.
+                    Pros:
+                    Inactive users, works better as it will not waste computing resources.
+                    Data not pushed so no hotkey problem.
+                    Cons:
+                    Fetching news feed slow as news feed not pre-computed.
+            Hybrid approach so get benefit both and avoid pitfalls.
+            Fetch news feed fast crucial, use push model for majority users.
+            Celebrity with many friends/followers pull news content on-demand avoid system overload.
+            Consistent Hashing useful technique mitigate hotkey problem as helps distribute request/data more evenly.
+            Working of fanout Service:
+                Fetch friends id from graph DB.
+                Get friend from user cache. filter friends based on user settings.
+                    If you mute or user selectively share information with specific friend or hide from others.
+                Send friend list and new post id to message queue.
+                Fanout worker fetch from message queue and store in feed cache<post_id,user_id>
+                    Memeory consumption very large if store entire user/post object in cache. Only ids stored.
+                    Memory size small, set configurable limit. User scrolling thousand post news feed slim.
+                    Most user interested in latest, so cache miss rate low.
+                Store post_id, user_id in news feed cache.
+    Newsfeed retrieval:
+        media content(images,videos) stored in CDN for fast retrieval.
+        User feed return more than list of ids. Contain username, profile picture, post content, images.
+            Fetch complete post and user object from cache to construct fully hydrated news feed.
+        Hydrated news feed return JSON format back to client for rendering.
+    Cache Architecture:
+        Extremely important. Cache tier into five layers.
+        News Feed: (news feed)-->store IDs of news feeds.
+        Content: (hot cache, normal)-->Stores every post.Popular content stored in hot cache.
+        Social Graph: (follower, following)-->stores user relationship data.
+        Action: (liked, replied, others)-->All actions on post.
+        Counters: (like counter, reply counter, other counters)
+
+Wrap Up:
+    Scaling Database:
+        Vertical vs Horizontal
+        SQL vs NoSQL
+        Master-slave replication
+        Read replicas
+        Consistency models
+        Database sharding
+    Other:
+        Web tier stateless 
+        Cache data as much 
+        Multiple data centers
+        Lose couple components with message queues.
+        Monitor key metrics: QPS during peak hours and latency while refreshing news feed interesting monitor.
+        
+        
+
+
+        
+                            

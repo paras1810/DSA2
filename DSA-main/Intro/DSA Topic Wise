@@ -32,5 +32,10 @@ Kahns Algorithm:
 
 Page Rank Algorithm:
     Output a probability distribution used to represent likelihood person randomly clicked on link will arrive particular page.
+
+Dijkstras Algorithm:
+    
+
+0-1 Breadth First Search:
         
 
