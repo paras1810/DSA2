@@ -37,5 +37,22 @@ Dijkstras Algorithm:
     
 
 0-1 Breadth First Search:
+    BFS:
+        Push source node in queue, set array of all visited to False, source_node to True
+        Run while loop for traverse queue and nested for loop for visit all neighbor for current queue
+        Do popleft from queue and visit all neighbors
+
+Bipartite Graph:
+    Graph whose vertices can divided into two disjoint set A and B.
+    Disjoint Sets
+    No Edges within sets.
+
+Union Find:
+    Two arrays of n Parent and depth
+    Union (node1,node2,parent,depth) find parent assign to bigger ones.
+    Find (node, parent) if not parent node=parent[node]
+
+Flood Fill Algorithm:
+    
         
 

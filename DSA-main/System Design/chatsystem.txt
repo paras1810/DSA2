@@ -1,0 +1,291 @@
+Popular Chat system: Whatsapp, Facebook Messenger, Wechat, Line, Google Hangout, Discord
+Chat System:
+    Performs different functions for different people.
+    Type of chat one-one like Messenger, Wechat and Whatsapp, office chat apps focus group like Slack
+    Game chat like Discord focus large group interaction and low voice latency.
+
+Design Scope:
+    What kind of chat(1on1 or group): Both 
+    Mobile App, Web App: Both
+    Scale: 50million DAU 
+    Group member: 100 people 
+    Important feature, Support attachement: 1on1, group chat indicator, Support text message only.
+    Message Size limit: Yes, 100, 000 chars
+    End to end encryption: Not required, will discuss time allows.
+    Long store chat history: Forever.
+
+    Focus like Messenger:
+        1on1 with low delivery latency.
+        Small group(100 people)
+        Online presence
+        Multi-device support.
+        Push notifications.
+        50 million DAU.
+
+High Level and Buy-In:
+    Basic knowledge of how clients and server communicate.
+    Chat service supports following functions:
+        Receive message from other clients.
+        Find right recipients for message and relay message to recipients.
+        If recipients not online, hold message for recipients on server until client online.
+
+        Sender----message--->Chat service-----message----->receiver 
+                            store message 
+                            relay message
+    Client intends to chat using one or more n/w protocol. Choice of protocol is important.
+        Request initiated by client for most client/server applications. 
+        Sender to chat service time tested(HTTP) protocol, common web protocol.
+        Keep-alive is efficient for this because it allows client to maintain persistent connection with chat services.
+        It also reduces TCP handshakes. HTTP is fine option also used by Facebook.
+    Receiver side bit more complicated:
+        HTTP is client initiated, not trivial to send message to server.
+        Technique used for server initiated connection: polling, long polling, and WebSocket.
+    Polling:
+        In this client peiodically asked server if messages available. Depending on frequency it could be costly.
+        It consumes precious server resources to answer question no most of time.
+            Client-------------------------->Server 
+                  <---------NO---------------
+    Long Polling:
+        Client holds connection actually open until new messages available or timeout threshold reached.
+        Once clients receive message immediately sends another requests to server.
+        Drawbacks:
+            Sender and receiver may not connect to same chat server. HTTP based servers are baseless.
+            If use round robin for load balancing, server that receive message might not have long-polling connection with client who receives message.
+            Server has no good way to tell if client disconnected.
+            Inefficient. If user not chat much long polling still makes periodic connection after timeouts.
+    Web Socket:
+        Most common solutions for sending asynchonous updates from server to client.
+            Client-----------------HTTP Handshake-------->Server 
+                  <----------------Acknowledgement--------
+        These are initiated by client. Bi-directional and persistent.
+        Starts as HTTP connection and could upgraded via handshake to Websocket connection.Though persistent connection server could send updates to client.
+        Websocket connections generally works even firewall is in place.Because they used port 80 or 443 also used by HTTP/HTTPS connections.
+        These connections are bidirectional and used for both sender and receiver sides.
+        Using this it simplifies design and makes implementation on both client and server side straightforward.
+        Websocket are persistent efficient management on server-side.
+    Protocol for other features signup, login, user, profile, etc use traditional request/response method over HTTP.
+    Category of Chat System Services:
+        Stateless Service:
+                            User(Mobile, Web)
+                                |
+                                |http 
+                            Load Balancer
+                                /||\
+            Service Discovery  Authentication service  Group Management   User Profile 
+            Traditional public facing request/response services, manage login, signup, user profile etc. Common features among many websites and apps.
+            These sit behinds load balancer whose job is to route correct service based on path.
+            Services can be monolithic or individual microservices. We discuss service discovery.
+            It primary job give client list of DNS host names of chat servers client could connect to.
+        Stateful Services:
+                            User1---------------ws------Chat Service 
+                            User2---------------------/
+            Only service is chat service. Stateful because each client maintain persistent n/w connection to chat server.
+            Client doesn't switch server as long it is available.
+            Service discovery coordinates closely with chat service to avoid server overloading.
+        Third Party Integration:  
+                            Push Notification                                 
+            Push notifications is most important third party integration. Inform user when message have arrived, even when app not running.
+    Scalability:
+        In theory possible to fit all connections in one modern cloud server.
+        Number of concurrent connections server can handle will limiting factor.
+        1M concurrent users, each need 10K of memory (depend on language choice)=10GB memory hold connection/box.
+        Issues with single server:
+            Single point of failure
+                                            User(mobile,desktop)
+                                                    /\
+                                http                                ws
+                                  |                                  |
+                            Load Balancer                          Real Time Service 
+                                  |                                Chat Server  Presence Server 
+                                  |                                   |               |     |
+                                  |                                   |               |     |
+                                  |                                   |               |     |
+                                  |                                   |               |     |
+Notification Servers<---------API servers<----------------------------|----------------     |
+        |                          |                                  |                     |
+        |                          |                                  |                     |
+        KV store                   KV store                         KV store                KV Store 
+        Client maintain persistent WebSocket connection to chat server for real-time messaging.
+            Chat servers facilitate message sending/receiver.
+            Presence server manage online/offline status.
+            API server handle everything user login, signup, change profile etc.
+            Notification servers send push notifications.
+            Key/Value store to store chat history. When offline user comes online see previous chat history.
+    Storage:
+        Data layer requires effort to correct. Which DB relational Dbs or NoSQL DBs. Examine datatypes and read/write patterns.
+        Two types data in chat system:
+            Generic Data: User Profile, setting, user friends list.
+                Stored in robust and relational DBs. Replication and sharding common techniques satisfy availability and Scalability.
+            Chat History Data: Understand read/write patterns.
+                Enormous data in chat systems. Messenger and Whatsapp 60 billion message/day.
+                Recent chat accessed frequently. User don't look up old chats.
+                Most cases recent chat history, user might requires random access data, such search, view mentions, jump specific message.
+                    Cases need to support by data layer.
+                Read to write ratio 1:1 on 1 to 1 chat apps.
+                Key-Value store for reasons:
+                    KV stores allow easy horizontal scaling.
+                    KV provide very low latency access data.
+                    Relational don't handle long tail data well. Indexes grow large, random access expensive.
+                    KV store proven reliable chat applications. FB messenger uses HBase, Discord uses Cassandra.
+        Data Models:
+            Important data message data.
+            Message Table for 1 on 1 chat:
+                Primary_key: message_id, decide message sequence.
+                Can't rely on created_at as sequence two message created same time.
+            Message:
+                message_id bigint
+                message_from bigint
+                message_to bigint
+                content text 
+                created_at timestamp
+            Message Table for group chat:
+                Primary_key: composite(channel_id, message_id).
+                Channel and group same meaning. channel_id is partition key because all queries in group operate in channel.
+            group_message:
+                channel_id bigint
+                message_id bigint
+                user_id bigint
+                content text 
+                created_at timestamp 
+        Message ID:
+            How generate message_id. It carries responsibility ensuring order messages. 
+            Message_id satisfy requirements:
+                ID must unique.
+                ID must sortable time, meaning new rows have higher IDs than old.
+            First idea: auto_increment in MySQL, NoSQL DBs don't provide features.
+            Second: 64-bit sequence generator like snowflake.
+            Final: local sequence number generator. Local means IDs only unique within group.
+                local IDs maintain message sequence one-on-one channel or group channel sufficient.
+                Easier to implement compare to global ID implementation.
+
+Design Deep dive:
+    Discuss service discovery, messaging flows, and online/offline indicators.
+    Service Discovery:
+        Primary role is recommend best chat server on criteria geographical location, server capacity.
+        Apache Zookeeper popular open source solution for Service discovery.
+        Registers all available chat servers and picks best chat server for client based location.
+                                            User
+                                            /\
+                                           /  \
+                                        login   ws
+                                        /       \
+                                Load Balancer   Chat Server 2
+                                    |
+                                API servers 
+                                    |
+                                Service Discovery
+                                    |
+                                Chat Server1.....Chat Server n 
+        Load Balancer sends login requests to API servers.
+        After backend authenticate user, server discovery finds best chat server for UserA.
+    Message Flows:
+        End to end flow of chat system. Discuss explore 1on1 chat, message synchronization and group chat flow.
+        1on1 chat flow:
+                                UserA                                   UserB
+                                  |                                        | Persistent WS connection
+            ID generator<------Chat Server1                            Chat server2
+                                  |                                         |
+                                  |                                         |online 
+                                  |------------>Message Queue---------------|
+                                                     |                      |offline 
+                                                     |                      |
+                                                KV Store                Push Notification servers
+        Message synchronization across multiple devices:
+            Users have multiple devices. How sync across multiple devices.
+            cur_max_message_id=653 UserA                            UserA laptop cur_max_message_id=842
+                                    |                                   |
+                                    |                                   |
+                                    Chat server1 (Session for User's laptop, phone) WS connection 
+                                    |                                   |
+                                    |                                   |
+                                    -------------------------------------
+                                                KV Store 
+            Each device maintain variable called cur_max_message_id, keeps track of latest message ID.
+            Message satisfying following conditions considered new_message:
+                receipent ID equal to currently logged-in user ID.
+                Message ID in key-value store larger than cur_max_message_id.
+            Distinct cur_max_message_id on device, message synchronization get new message from KV store.
+        Small group chat flow:
+            User A 
+                |
+                |
+            Chat server 1
+                |
+                |---------------------->Message sync queue-------->User B 
+                |
+                |---------------------->Message sync queue-------->User C 
+            First message from userA copied to each member's sync queue.
+            Think message queue as inbox for receipent. Design choice for small group chat.
+                simplifies message sync flow as each client only need to check own inbox get new messages.
+                group number small, storing copy in each receipent inbox not too expensive.
+            WeChat uses similar approach and limit group 500 members. For group with lot users, storing copy not acceptable.
+            On receipent side, receipent can receive from multiple users.
+            Recipient has inbox(message sync queue) contain message from different senders.
+                UserA              UserB
+                  |                 |
+                Chat server1        Chat server2
+                  |                 |
+                  |                 |------>Message Sync queue------->UserC 
+                  |------------------------>
+    Online Presence:
+        Online presence indicator essential feature of chat applications.Green dot next to user's profile.
+        In high level presence server responsible for managing online status and communicate with Websocket.
+        Flow that trigger online status.
+        User Login:
+            After ws connection built b/w client and real-time service, userA online status and last_active_at saved in KV store.
+            Presence indicator shows user online after she logs in.
+                UserA<-----ws------>Presence servers----------------->KV store 
+                                                                UserA: {status:online, last_active_at:timestamp}
+        User Logout:
+            When user logs out, online status change offline in KV store. Presence indicator show user offline.
+                UserA----logout-->API servers------->Presence servers------>KV store 
+                                                                            User A:{status:offline}
+        User disconnection:
+            Internet connection is inconsistent and inreliable.When user disconnects from internet, persistent connection b/w client and servers lost.
+            Naive way to handle disconnects to mark user offline and change to online connection re-establish.
+            Common for users to disconnect and reconnect internet frequently short time.
+            N/w connections can be on and off while user goes through tunnel.
+            Updating online status on every disconnect/reconnect make presence indicator change too often, resulting poor experience.
+            Heartbeat mechanism solve problem. Periodically online client sends heartbeat event to presence servers.
+            If presence server receive heartbeat within xsec from client, user considered online, else offline.
+            heartbeat in 5sec. After sending 3 heartbeat, client disconnect and does't reconnect in x=30sec.
+            Online status changed to offline.
+                Client                                          Server 
+                  |                                                |
+                  |                                                |
+                  ----------------heartbeat------------------------> Heartbeat received. Status online.
+                  |5                                               |
+                  -------------------------------------------------> Heartbeat received. Status online.
+                  |                                                |
+                  |30                                              |
+                  ------------------------------------------------->No heartbeat 30sec. Status offline.
+        Online status fanout:
+            How users A friends know status changes. Presence server uses publish-subscribe model, in which each friend maintains channel.
+            Communication b/w client and servers real-time WS.
+            When user's online status publishes event three channels A-B, A-C and A-D
+                                    Presence Servers 
+                          /-------->Channel A-B<-------subscribe--------User B   
+            UserA---------|-------->Channel A-C<-------subscribe--------User C  
+                          \-------->Channel A-D<-------subscribe--------User D    
+            Effective for small group. WeChat use approach group size capped 500.
+            Larger group informing all member online status expensive and time consuming.
+            Assume group has 100K members, status change generate 100K events.
+            Solve performance bottleneck, possible solution fetch online status only user enters group or manually refreshes friend list.
+
+Wrap Up:
+    KV for chat history persistence and API servers for other functionalities.
+    Extend chat app support media files such as photos and videos. Media are larger than text in size.
+        Compression, cloud storage, and thumbnails interesting topics.
+    End-to-end encryption:
+        Whatsapp support this. Only sender and receipent read messages.
+    Caching message client side:
+        Effective to reduce data transfer b/w client and server.
+    Improve Load Time:
+        Slack built geographically distributed n/w to cache users data, channels for better load time.
+    Error Handling:
+        Chat server error:
+            There might hundreds of thousands, or more persistent connections to chat server.
+            Chat server goes offline, server discovery(Zookeeper) provide new chat server for clients establish new connections with.
+        Message resent mechanism:
+            Retry and queueing common techniques for resending messages.         
+
