@@ -1,0 +1,205 @@
+Introduction:
+    When search on Google or shopping at Amazon, you type search box one or more matches presented for you.
+    Referred as autocomplete, typeahead, search-as-you-type, incremental search.
+    Search autocomplete important feature many products.
+    Interview Question: design search autocomplete system, design top k or design top k most search queries.
+
+Design Scope:
+    Matching only support at beginning of search or middle as well: Only at beginning of search.
+    Autocomplete suggestion return: 5, determined by popularity, decided by historical query frequency.
+    System support spell check: No, spell check or autocomplete not supported.
+    Search query language: English, If time allow multi-language
+    Capitalization and special characters: No, assume search query lowercase alphabetic characters.
+    Users: 10million DAU.
+    Requirements:
+        Fast response time:
+            User types search query, autocomplete suggest fast enough.
+            Facebook autocomplete system reveals system return result within 100millisec. Otherwise stuttering.
+        Relevant: Autocomplete should be relevant to search term.
+        Sorted: Result return by system sorted by popularity or ranking models.
+        Scalable: System handle high traffic volume.
+        Highly available: System should remain available and accessible when part system offline, slow down, experience unexpected n/w errors.
+
+Back of envelope estimation:
+    10million DAU.
+    Average person 10/search/day.
+    20 bytes data query string:
+        ASCII chat encoding 1char=1byte
+        query contain 4words have 5char each=4*5=20bytes/query.
+    Every char into search box client sends request backend autocomplete suggestions.
+    20 request sent/query. 6 requests if you type "dinner"
+    search?q=d 
+    search?q=di 
+    ...search?q=dinner 
+    QPS: 10,000,000*10query/day*20char/24/3600=~24000query/sec.
+    Peak QPS=QPS*2=~48000
+    20% daily query new. 10million*10query/day*20byte/query*20%=0.4GB new data added storage daily.
+
+High Level Design and Buy-In:
+    Data Gathering service:
+        Gather user input query and aggregates in real-time.
+        Real-time processing not practical for large data-sets.
+        Assume frequency table stores query string and frequency. Beginning frequency table empty.
+        User entries "twitch", "twitter", "twitter", "twillo"
+        query:twitch        Query twitch, Frequency:1
+    Query Service:
+        Given search query or prefix, return 5 most frequent search term.
+        Query: Stores query string.
+        Frequency: Represent number of times query searched.
+        Query       Frequency
+        Twitter     35
+        twitch      29
+        twilight    25
+        User types "tw" search box top 5 search query displayed: twitter, twitch, twilight
+        Select * from frequency_table where query like 'prefix%'
+        order by frequency DESC LIMIT 5
+        Acceptable soln when dataset small. When large accessing dataset becomes bottleneck.
+
+Design Deep Dive:
+    Trie Data Structure:
+        Relational DB used for storage in High level. Fetching top 5 from relational DB inefficient.
+        Data Structure trie(prefix tree) used overcome problem.
+        Trie("try") is tree like structure can compactly store strings. Cames from re"trie"val, indicates it designed for string retrieval operations.
+            Trie (tree like DS). Root represent empty string.
+            Each nodes store char 26, one for each possible char. Save space we don't draw empty links.
+            Each tree node represent single word or prefix string.
+        For Ex: (Query, Frequency)"tree(10)", "try(29)", "true(35)", "toy(14)", "wish(25)", "win(50)".
+        After adding frequency in trie.
+                                            Root
+                                             /\
+                                        t           w 
+                                        /\          /\
+                                tr          to     wi 
+                                /|\         |       |\
+                    tre      tru try29  toy(14)    wis  win(50) 
+                    |          |                    |
+                    tree(10)   true(35)             wish(25)
+        How autocomplete work with Trie?
+            p:length of prefix, n: total number of nodes in trie, c:number of children of node 
+            Find prefix. Time complexity:O(p).
+            Traverse subtree prefix node get children. Valid child can form valid query string. TC:O(c)
+            Sort children and get top K. TC:O(clogc)
+        For Ex: k=2, user types: "tr"
+            Find prefix node "tr"
+            Traverse subtree get valid child, [tree:10], [true:35], [try:29]
+            Sort children and get top 2. [true:35] and [try:29].
+        Time complexity: O(p)+O(c)+O(clogc)
+        Limitation of Algo:
+            too slow because we need to traverse entire trie get top k results in worst scenario.
+                Limit max length of prefix.
+                    Long search query are rare in search box. Safe to say P is small number.
+                    If we limit this can reduced from O(p) to O(1).
+                Cache top search queries at each node.
+                    To avoid traversing whole trie, store top k most frequently queries at node.
+                    Since 5 suggestion enough for users, k relatively small, only top 5 query cached.
+                    In this way time complexity to retrieve top 5 query reduced. This requires lot of space.
+                    Trading space for time is well worth as fast response is important.
+        Optimise Algorithm:
+            Return prefix node. TC:O(1)
+            Return top K. TC: O(1), our algorithm take O(1) to fetch top k queries.
+    Data Gathering Service:
+        Previous design when user search query, data updated in real time. Not practical two reasons:
+            User enters billion query every day. Updating trie on each query significantly slow down query service.
+            Top suggestions not change much once trie built. It is unnecessary to update trie frequently.
+            Design scalable data gathering service need to examine data source and how much used.
+            Real-time apps like Twitter need upto date autocomplete suggestions.
+            For Google keywords might not change on daily basis.
+            Foundation for both remain same because data used to build trie come from analytics or logging services.
+
+            Analytics Logs------->Aggregators--->Aggregated Data---->Workers----(Updated Weekly)-->Trie DB
+                                                                                                    |
+                                                                                        Weekly snapshot DB(Trie Cache)
+            Analytics Logs: Stores raw data about search queries. Logs append only not indexed.
+                Query   Time 
+                tree    2019-10-01
+            Aggregators: Size of analytics logs is large, data not right format. Need to aggregate data so easily processed by system
+                For real time apps like Twitter aggregate data in shorter time as real-time results needed.
+                For many use cases aggregating less frequently, once per week, might good enough. Assume trie build weekly.
+            Aggregated Data:
+                "time" fields represent start time of week. "frequency" is sum of occurences corresponding query in that week.
+                Query Time Frequency
+                tree  2019-10-01  12000
+            Workers: Set of servers that perform asynchronous jobs at regular interval. Build trie structure and store in DB.
+            Trie Cache: Distributed cache system keeps trie in memory for fast read. Takes weekly snapshot of DB.
+            Trie DB: Persistent storage. Two options:
+                Document store:New trie build weekly, periodically take screenshot of it, serialize it and stored serialized in DB.
+                    Document store like MongoDB good fit for serialize data.
+                Key-Value Store: Trie represent in hash table by:
+                    Every prefix trie mapped to key in hash table 
+                    Data on each node mapped to value in hash table.
+                    Root        Key         Value 
+                      |         b           [be:15, bee:20, beer:10, best:35]
+        [be:15,bee:20 b         be          [be:15, bee:20, beer:10, best:35]
+        beer:10,best:35]
+                      |
+        [be:15,bee:20 be 
+        beer:10,best:35]
+    Query Service:
+        High level, query service directly fetch top 5 results.
+                        User(Web, Mobile)
+                            \/
+                        Load Balancer
+                            |
+                        API Servers 
+                            |
+                        Cache(Trie Cache)-------->Trie DB 
+        Cache miss can happen when cache server out of memory or offline.
+        Query service requires lightning fast speed. Below optimizations:
+            AJAX request: Web app, browsers usually send AJAX request fetch autocomplete results.
+                Main benefit of AJAX that sending/receiving request/response doesn't refresh whole web page.
+            Browser Caching:
+                Many apps, autocomplete search not change within short time.
+                Autocomplete suggestions can saved in browser cache allow subsequent request get result from cache directly.
+                Google search use same mechanism. It saved cache result in browser 1hour.
+                "private" in cache control results intended single user and not cached by shared cache.
+                "max-age"=3600 valid for 3600sec, an hour.
+                cache-control private,max-age=3600
+            Data Sampling: Large scale system, logging every search query require lot processing power an storage.
+                Data sampling is important. only 1out of every N request logged by system.
+    Scale the storage:
+        Scalability issue when trie grows too large to fit one server.
+        English is only supported language. naive way shard based on first character.
+            Need two servers storage store: a to m, n to z second server.
+            Need three servers split a to i, j to r, s to z.
+            Split 26 servers there are 26 alphabetic character.
+            Can split on second or third level aa-ag, ah-an, ao-au and av-az.
+        Problem: This can create uneven distribution as more words start from c than x.
+        Data Imbalance problem mitigation:
+            Analyze historical data distribution pattern and apply smarter sharding logic.
+            Shard map manager maintains lookup DB for identifying where row should stored.
+            If historical query for s equivalent [v,w,x,y,z]. Two shard one for s other for u to z.
+                    Web Servers---------------What shard is it------------>Shard map manager 
+                            |-----------------Retrieve data from shard---->Databases(Shard1, 2,3)
+    Trie operations: Operation of Trie:
+        Create:
+            Created by workers using aggregated data. Source of dat Analytics log/DB.
+        Update: Two ways:
+            Update weekly. Once trie created, new trie replaces old one.
+            Update individual trie node directly:
+                For small size of trie. When update trie node all ancestors upto root must updated because ancestors store top queries of children.
+                search query "beer" original value 10 node and ancestors updated to 30.
+        Delete:
+            Remove hateful,violent,sexually explicit, dangerous autocomplete suggestions.
+            Add filter layer front of Trie cache filter unwanted suggestions. Gives us flexibility removing results based on different filter rules.
+            Unwanted suggestions removed physically from DB aynchronically correct data build trie in next update cycle.
+            API servers<------------------Filter Layer<------------------Trie Cache
+    
+Wrap Up:
+    How you extend design support multiple language?
+        Support not english store Unicode char in Trie node.
+        Unicode: "encoding standard covers all char for writing system of world, modern and ancient"
+    Top search query in one country differ from other?
+        Build different trie for different country. Improve response time, store trie in CDNs.
+    Support trending real time queries?
+        News event break out, search query suddenly become popular. Original design not work.
+            Offline worker not scheduled update trie because schedule run weekly basis.
+            Even schedule take long to build trie.
+        Real-time search autocomplete complicated. Few ideas:
+            Reduce working data set by sharding.
+            Change ranking model and assign more weight to recent search query.
+            Data come as streams, don't have access all data at once. Streaming data means data generated continuously.
+            Stream processing requires: Apache Hadoop MapReduce, Apache Spark Streaming, Apache storm, Apache Kafka.
+            
+
+        
+    
