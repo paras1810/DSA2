@@ -1,0 +1,249 @@
+Cloud storage services as Google Drive, Dropbox, Microsoft OneDrive, Apple iCloud.
+Google Drive is file storage and synchronization service helps you store documents, photos, videos, other files in cloud.
+Can access file from any computer, smartphone and tablet.Can easily share files with friends, family and coworkers.
+
+Design Scope:
+    Important features: Upload and Download files, file sync, notifications.
+    App: Mobile App, Web App.
+    Supported file formats: Any file type.
+    File Encrypted: Yes file storage must encrypted.
+    File size limit: 10GB or smaller.
+    User: 10M DAU.
+    Requirements:
+        Add file: Easy way to add file to drag and drop file into Google drive.
+        Download files.See file revisions
+        Sync files across multiple device: When file added to one device, automatically synced other device.
+        Share file with friend, family and coworkers. Notification when file edited, deleted shared with you.
+    Not Discussed Requirements:
+        Google doc editing and collab. Allow multiple people edit same document simultaneously.
+    Non-Functional Requirements:
+        Reliability: Extremely important for storage system. Data loss unacceptable.
+        Fast sync speed: If take too much time, user become impatient and abandon product.
+        Bandwidth usage: If product use unnecessary bandwidth, when on mobile data.
+        Scalability: Should able to handle high volumes of traffic.
+        High availability: User should use system when some server are down, offline or have unexpected n/w errors.
+
+Back of envelope:
+    App has 50million sign up user and 10million DAU.
+    User get 10GB free space.
+    User upload 2file/day. Average file size 500KB. 1:1 read to write.
+    Total space 50million*10GB=500PB.
+    QPS upload: 10million*2upload/24/3400=~240
+    Peak QPS=QPS*2=480.
+
+High Level Design and Buy-In:
+    Build everything in single server and scale it up support millions users.
+    Web server to upload and download file.
+    DB keep track of metadata user data, login info, file info.
+    Storage system to store files. Allocate 1TB storage space store files.
+    Set up Apache web server, MySQL DB, directory called drive, root directory store uploaded files.
+    Under drive/directory root directory store directory known as namespace, Each namespace has file for that user.
+    File on server named same as original file name. Each file can uniquely identify by namespace and relative path.
+    drive 
+        user1
+            recipes
+            chicken_soup.txt
+    APIs: upload file, download file, get file revisions:
+        Upload file Google drive:
+            Simple upload: When file size small.
+            Resumable upload When file size large and high chance n/w interruption.
+            https://api.example.com/files/upload?uploadType=resumable
+            Params: uploadType=resumable  data: Local file to uploaded.
+                Send initial request to retrieve resumable URL.
+                Upload data and monitor upload state.
+                If upload disturbed, resume upload.
+        Download file from Goggle Drive:
+            https://api.example.com/files/download
+            Params: path: download file path. {"path": "recipes/soup/best_soup.txt"}
+        Get file revisions:
+            https://api.example.com/files/list_revisions
+            Params:
+                path: path to file to get revision history. limit: mav number of revision return.
+                {"path": "/recipes/soup/best_soup.txt", "limit":20}
+        All APIs require user authentication use HTTPs. Secure Sockets Layer(SSL) protect data transfer b/w client and backend servers.
+    Move away from single server:
+        As file uploaded get space full alert. User can't upload files. Need to dhard data, so store on multiple stores.
+                                User_id%4
+                                    //\\
+                        Server1 Server2 Server3 Server4 
+        Potential data loss case of storage server outage. Companies like Netflix and Airbnb use Amazon S3 for storage.
+        (Amazon Simple Storage Service) object storage service offers industry leading scalability, availability, security and performance.
+        Amazon S3 supports same-region and cross-region replication. Geographic area where AWS have data centres.
+        Redundant file store in multiple region guard against data loss and ensure availability. Bucket is like folder in file systems.
+            Bucket(Region A)---->Replication(RegionA)   Bucket(RegionA)------->Replication(RegionB)
+        Load Balancer:
+            Distribute n/w traffic.Ensures evenly distributed traffic, if web server goes down, redistribute traffic.
+        Web Servers:
+            After load balancer web server can added/removed easily, depend on load traffic.
+        Metadata DB:
+            Move DB out of server avoid single point of failure. Set up replication and sharding meet availability and scalability requirement.
+        File Storage:
+            Amazon S3 for file storage. Ensure availability and durability, file replicate in two geographical regions.
+        We decoupled web servers, metadata DB, file storage single server.
+                                    User(Web Browser, Mobile App)
+                                                \/
+                                            Load Balancer
+                                                |
+                                            API Servers 
+                                                /\
+                                Metadata DB         File Storage
+    Sync Conflicts:
+        For large system Google Drive, sync conflict happen time to time.
+        First version get processed win, and version get processed later receives conflict.
+        User1--------synced--->Our System      User1----------synced----->Our System 
+        User 2--------------------|                 ----------conflict------|
+        User 2 has option merge both file or override one version with other.
+        While multiple user editing same doc same time, challenge keep document synchronized.
+
+High Level Design:
+                --------------------User--------------------------------------
+                |                     |                                      |
+                |                     |                                      |
+                |           |------Load Balancer                             |                   
+            Block Server    |          |                                     |long polling
+                |           |          |                                     |
+                |           |      API Servers----------------------->Notification--->Offline backup queue                                  
+            Cloud Storage---           /\                                 Service
+                |               Metadata  Metadata DB 
+                |                  Cache
+            Cold Storage
+    Block Servers:
+        Upload block to cloud storage. Refer as block level storage, to store files on cloud based environment.
+        File can split into blocks, with unique hash value, stored in metadata DB. Each block is independent object store in storage system S3.
+        Reconstruct file blocks joined in particular order. For ex Dropbox set maximal block size 4MB.
+    Cloud Storage:
+        File split into smaller blocks and stored in cloud storage.
+    Cold Storage:
+        Computer system designed for storing inactive data, files not access for long time.
+    Load Balancer:
+        Evenly distribute request among API servers.
+    API servers:
+        Responsible for everything else than upload flow. Used for user authentication, managing user profile, uploading file metadata.
+    Metadata Cache: Cache for fast retrival.
+    Notification Service:
+        Publisher/subscriber system allows data to trasferred from notification to client certain event happen.
+        In specific notification service notify client when file added/edit/removed so they can pull latest change.
+    Offline backup queue:
+        If client offline and can't pull latest file changes, offline queue stored info so change sync when client online.
+
+Design Deep Dive:
+    Block Servers:
+        Large files that update regular, sending whole file on each update consume lot bandwidth.
+        Optimization to minimize amount of n/w traffic.
+            Delta sync:
+                When file modify only modify block sync instead of whole file using sync algo.
+            Compression:
+                Apply Compression on block reduce data size. Blocks compress using compressing algo depend on file types.
+                gzip and bzip2 to compress text file. Compression algo needed to compress images and videos.
+        Block server do heavy lifting work for upload files. Process file passed from client by split file into blocks,
+        compressing each block and encrypt them. Instead uploading whole file storage system, only modify block trasfer.
+                    -----split->Block1--compress--->zip----encrypt--->lock--
+                File----split-->Block2--compress--->zip----encrypt--->lock--Cloud Storage 
+        Using delta sync only two blocks (block1 and block5) uploaded to cloud storage.
+        These allow us to save n/w traffic by providing delta sync and compression.
+        Block(1,(2),3,4,(5),6,7,8)----------changed only------->Block(2,5)Cloud Storage 
+    High Consistency requirement:
+        Our system require high consistency by default. Unacceptable for file shown differntly by different client at same time.
+        Need to provide strong consistency for metadata cache and DB layers.
+        Memory cache adopt eventual consistency by default, means different replica have different data.
+        Achieve strong consistency:
+            Data in cache replica and master consistent.
+            Invalidate cache on DB write ensure cache and DB hold same value.
+        Achieve strong consistency in SQLDB easy as support ACID(Atomicity, Consistency, Isolation, Durability)
+        NoSQL not support ACID property default. ACID must program incorporate in sync logic.
+    Metadata Database:
+        user         --->                     workspace ---->          file 
+            user_id,user_name,                  id                      id 
+            created_at                          owner_id                file_name
+        block                                   is_shared               relative_path
+            block_id,file_version_id            created_at              is_directory
+            block_order         --->          file_version     <---   latest_version
+        device(user)                 ----->        id                   checksum
+            device_id,user_id                      file_id              workspace_id
+            last_logged_in_at                      device_id            created_at 
+                                                   version_number       last_modified
+                                                   last_modified 
+        User: Basic info such as username, email, profile photo.
+        Device: Stores device info. Push_id for send and receive mobile push notifications. User multiple device.
+        Namespace: Root directory of user.
+        File: Store everything related to latest file.
+        File_version: Version history of file. Exist row are read-only keep integrity of file version history.
+        Block: Store everything related to file block. file version can construct join all blocks on correct order.
+    Upload Flow:
+        Client1     Client2     BlockServers   CloudStorage     APIServers      MetadataDB      NotificationService
+        ---------------add file metadata---------------------------->
+                                                                    --uploadpendingstatus->
+                                                                                    --notify change-->
+                    <---------------------------------------notify changes----------------------------
+        --------------upload------->------>upload file
+                                                    --update metadata->  
+                                                            --upload status--------->
+                                                                                ----notify change--->
+                    <----------------------------------notify change---------------------------------
+        Two request in parallel: add file metadata, upload file to cloud storage.                                                    
+    Download Flow:
+        If client A online file change by another client, notification service inform clientA to pull latest change data.
+        If client A offline file changed by another client, data saved cache. When user online pull latest changes.
+        Once file change, first request metadata via API servers, then download blocks to construct file.
+            Client2     BlockServers        CloudStorage        APIServers      MetadataDB      NotificationService
+                <---------------------------notify changes-------------------------------------------------
+                ----------------------------get changes------------->
+                                                                    ---get change---->
+                                                                    <-return change----
+                <-----------------return change-----------------------
+                ---download blocks->
+                            --download blocks---->
+                            <----blocks-----------
+                <--blocks-------
+    Notification Service:
+        Maintain consistency any mutuation perform needs inform other client reduce conflicts.
+        Allows data to client as events happen.
+            Long Polling. Dropbox uses long polling.
+            WebSocket: Provides persistent connection b/w client and server. Communication bi-directional.
+        Use long-polling as:
+            Communication is not bi-directional. Server send about file change to client not vice versa.
+            Websocket for real-time bi-directional such as chat app. Google Drive notification sent infrequently with no burst.
+        If change detect client close long poll. Closing means client must connect metadata server download latest change.
+        After response receive or connection timeout, client immediately send request keep connection open.
+    Save Storage Space:
+        Support file version and reliability, multiple version of same file across multiple data center. Storage space fill quickly with frequent backups:
+            De-Duplicate data blocks:
+                Eliminate redundant block at account level easy way save space.Block are identical have same hash value.
+            Adopt intelligent data backup strategy:
+                Set limit: On number of version store. Limit reach oldest version replace by new version.
+                Keep valuable version:
+                    Saving every edited version for heavily modify doc mean file saved 1000time within short period.
+                    Limit number of save.Give more weight recent version. Experiment find optimal number of version to save.
+            Moving infrequently used data cold storage:
+                Data has not active for months or years. Cold storage like Amazon S3 glacier cheaper than S3.
+    Failure Handling:
+        Load Balancer Failure:
+            If fails secondary would become active and pick traffic. Usually monitor heartbeat, periodic signal b/w load balancer.
+            It consider fail if heartbeat not sent for some time.
+        Block Server Failure: Other server pick unfinished or pending jobs.
+        Cloud Storage Failure:  S3 bucket replicate in different region. File not available in one region fetch from different region.
+        API server failure: Stateless service. If API server fails, traffic redirected other server by load balancer.
+        Metadata Cache failure: Replicate multiple time. If one node goes down, still access other node fetch data.
+            Bring new cache server replace failed ones.
+        Metadata DB failure:
+            Master Down: Promote one slave to master and bring new slave.
+            Slave Down: Used another slave for read operations and bring another DB server replace failed ones.
+        Notification service failure:
+            Each notification server connected many users. Dropbox 1million connection open per machine.
+            If connection goes client must reconnect different server. One server can keep many connection but reconnect all lost client relatively slow process.
+        Offline backup queue failure:
+            Queue replicate many time. If fails consumer of queue need to resubscribe backup queue.
+
+Wrap Up:
+    Combination of strong consistency, low n/w bandwidth and file sync.
+    Flows: Manage file metadata and file sync. Notification service another imp component.
+    Upload files directly to cloud storage instead through block servers. Make file faster because file only need transfer to cloud storage.
+        Drawback to file direct to cloud:
+            Same chunking, compression and encrypt logic implemented on different platforms(ioS, Android, Web).
+            Error-prone and require lot of engineering effort. Our logic in central place: Block servers.
+            Client easily hacked or manipulate, implementing encrypt logic on client side not ideal.
+        Evolution is moving online/offline service called Presence service.
+        Presence service out of notification servers, online/offline can integrate by other service.
+
+
+

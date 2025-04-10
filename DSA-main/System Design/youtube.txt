@@ -1,0 +1,251 @@
+Introduction:
+    Design video sharing platform such Netflix, Hulu, YouTube.
+    Content creators upload videos and viewers click play. Impressive stats, demography and fun fact YouTube.
+    Number of monthly active users: 2 billion
+    Videos watched per day: 5 billion
+    73% of US adults use YouTube 
+    50 million creators YouTube
+    YouTube ad revenue 15.1billiondollar full year 2019, 36% up from 2018.
+    Responsible for 37% all mobile internet traffic.
+    Available in 80 different languages.
+    YouTube enormous, global and makes lot money.
+
+Design Scope:
+    Watching video, comment, share, like video, save video to playlist, subscribe channel.
+    Important features: Upload video and watch video.
+    Client: Mobile, Web Browsers, smart TV.
+    DAU: 5million
+    Average time spent: 30min
+    Support International user: Yes, large % are international.
+    Supported video resolution: Accept most video resolution and formats.
+    Encryption required: Yes 
+    Size requirement video: Small and medium sized videos. Max allowed size 1GB.
+    Some existing cloud Infra by Amazon, Google, Microsoft: Yes leverage some existing cloud services.
+    Requirements:
+        Ability upload video fast, change video quality.
+        Smooth video Streaming. Low infrastructure cost.
+        High availability, Scalability and reliability.
+        Client supported: mobile, web browser, smart tv.
+
+Back of envelope estimation:
+    DAU: 5million watch 5 videos/day.
+    10% of user upload 1 video/day.
+    Average video size: 300MB.
+    Daily storage capacity: 5million*10%*300MB=150 TB.
+    CDN cost:
+        Cloud CDN serves video, charged for data transferred out CDN.
+        Amazon's CDN CloudFront cost estimation. 100% traffic from US. Average cost/GB=0.02dollar.
+        5million*5*0.3GB*0.02dollar=150000dollar/day.
+    Rough cost estimation serving cost from CDN lots of money. Cloud providers working on reducing this cost.
+
+High Level and Buy-In:
+    CDN and blob storage cloud service we use.
+        In system design interview sometime choosing right tech to do job is important than how technology works.
+            Like mentioning blob storage for storing source video is enough.
+        Building scalable blob storage and CDN extremely complex and costly. Even netflix and Facebook don't build everything themselves.
+            Netflix leverages Amazon's cloud and Facebook use Akamai's CDN.
+                            Client(Phone, TV, Laptop)
+                                    /\
+                    Stream video        everything else 
+                            /                   \
+                        CDN                        API servers.
+        CDN: Video stored in CDN. When press play video streamed from CDN.
+        API servers: Other than video streaming. Includes recommendation system, generating video upload URL, 
+            updating metadata DB and cache, user signup etc.
+        Discuss two flows: Video uploading flow, Video streaming flow.
+    Video Uploading Flow:
+        Original storage<-------------------User(TV,Mobile,Tab)
+                |                                |
+                |                                |(upward)
+                |                                Load Balancer 
+                |                                |
+                |                            API servers 
+                |                                /\
+                |                    Metadata Cache Metadata DB<-----------------
+                |                                |                              |
+                |                                |-------------------------------
+                |                                                               |
+        Transcoding servers-----transcoding---->Completion queue------->Completion handler  
+                |                complete                                                                 
+                |
+        Transcoded storage------------>CDN
+        Users, Load Balancer, API servers: General
+        Metadata DB: Video metadata stored here. Sharded and replicated meet performance and high availability requirements.
+        Metadata Cache: Better performance, video metadata and user objects cached.
+        Original Storage: Blob storage to store original videos. A Binary Large Object(BLOB) collection binary data stored as single entity in DBMS.
+        Transcoding servers: Video transcoding also called video encoding. Process to convert video format to other(MPEG, HLS, etc) provides best video 
+            streams possible for different devices and bandwidth capabilities.
+        Transcoded Storage: BLOB storage store transcoded video files.
+        CDN: Video cache in CDN. When click play, video streamed from CDN.
+        Completion Queue: Message queue stores info about video transcoding completion events.
+        Completion Handler: list of workers pull event from completion queue and update metadata cache and DB.
+        How uploading flow works running in parallel:
+            Upload actual video.
+            Update metadata. Contains info about video URL, size, resolution, format, user info, etc.
+    Flow A: Upload actual video:
+    Flow B: Update metadata
+        When file uploaded to original storage, client sends parallel request to update video in metadata.
+        Request contains video metadata include file_name, size, format. API serves update metadata cache and DB.
+        User------Update metadata-->Load Balancer----->API servers-----Metadata Cache, DB.
+    Video Streaming Flow:
+        Youtube starts streaming immediately without waiting whole video downloaded.
+        Downloading means whole video on your device, while streaming means device continuously receives video streams from source videos.
+        When watch streaming videos, client loads little bit of data at time so can watch videos immediately and continuously.
+        Streaming Protocol: Standardized way control data transfer for video streaming:
+            MPEG-DASH: Moving Pictures Expert Group and DASH:- Dynamic Adaptive Streaming over HTTP.
+            Apple HLS: HLS stands HTTP live streaming.
+            Microsoft Smooth Streaming
+            Adobe HTTP Dynamic Streaming(HDS)
+        Different streaming Protocol support different video encodings and playback players. Choose right streaming protocol for our case.
+        Video streamed from CDN directly. Edge server closest to you deliver video.
+            Client-----streaming video------->CDN 
+        
+Design Deep Dive:
+    Video Transcoding:
+        When record video it gives certain format of video file.
+        Play smoothly on other devices, video must encoded into compatible bitrate and formats.
+        Bitrate is rate at which bits processed. High bitrate need more processing power and fast internet speed.
+        Importance:
+            Raw video consumes large storage space. Hour long high definition video recorded 60frames/sec take up few hundred GB space.
+            Many device and browser support certain video format. Important to encode video different format for compatibility reasons.
+            Ensure user watch high-quality videos maintaining smooth playback, provide high/low resolution to user as per bandwidth.
+            N/w condition change especially on mobile devices. Ensure video play continuously, switching video quality automatically or manually based on n/w conditions.
+        Types of encoding formats:
+            Container:
+                Basket that contains video file, audio and metadata. Tell container format by file extension, .avi, .mov, .mp4.
+            Codecs:
+                Compression and decompression algo aims reduce video size preserving video quality. Most used video codecs H.264, VP9, HEVC.
+    Directed acyclic graph(DAG):
+        Transcoding video computationally expensive and time-consuming. Different creators have different video processing time.
+        Some create watermark on top, some thumbnails images, some upload high definition videos.
+        Support differ video processing pipeline and maintain parallelism, important to add some level of abstraction and client programmer define what task execute.
+        Facebook streaming video engine use DAG programming model, define task in stages execute sequentially or parallelly.
+        Use same DAG to achieve flexibility and parallelism.
+                           |---->Video------->Tasks(Inspection,Video Transcoding, Thumbnails,...Watermarks) 
+                           |                                        |
+        Original video---------->Audio-------->Audio encoding--------------->Assemble 
+                           |
+                           |---->Metadata 
+        Inspection: Sure video have good quality and not malformed.
+        Video Encodings: Converted to support differ resolutions, codec, bitrates.
+            360p.mp4, 480p.mp4, 720p.mp4, 1080p.mp4, 4k.mp4.
+        Thumbnail: Either be uploaded by user or generated by system.
+        Watermark: Overlay on top of video contains identifying info about video.
+    Video transcoding architecture:
+            |----------------------------------------------------------->Temporary storage 
+            |                                                               |
+        Preprocessor----->DAG scheduler----->Resource manager-------->Task workers------>Encoded video 
+        Preprocessor: Four responsibility
+            Video splitting: Video stream split into smaller Group of pictures(GOP) alignment.
+                GOP group/chunk frames arranged in specific order. Each chunk independently playable unit, few sec length.
+            Old phone or browser not support video splitting. Preprocessor split by GOP alignment for old clients.
+            DAG generation: processor generates DAG based on configuration files client programmers write.
+                    Download-------->Transcode 
+            Cache Data: Preprocessor cached for segmented videos. Better reliability, preprocessor stores GOPs and metadata in temporary storage.
+                If encoding fails, system use persisted data for retry operations.
+        DAG Scheduler: Split DAG graph into stages tasks and put them in task queue in resource manager.
+        Resource Manager:
+            Responsible for managing efficiency of resource allocation. Has three queues:
+                Task queue: Priority queue contains task to executed.
+                Worker queue: Priority queue contain worker utilization info.
+                Running queue: Contains info about currently running task and worker running task.
+                Task scheduler: Picks optimal task/worker, instruct chosen task worker execute job.
+                Resource manager
+                Task queue<------get highest priority task-------
+                Worker queue <---get optimal worker--------------Task scheduler----run task--->Task Workers(Watermark, Encoder, Thumbnail, Merger)
+                Running queue<---task/worker info queue------
+        Task Workers:
+            Run tasks which are defined in DAG. Diff task workers may run diff tasks.
+        Temporary Storage:
+            Multiple storage system used here. Choice of storage system depends on factors like data type, data size, access frequency,
+            data life span.Metadata is frequently accessed by workers, data size usually small. So metadata cached in memory is good idea.
+            For video, audio put them in blob storage. Data in temporary storage freed corresponding video processed.
+        Encoded video: 
+            Final output of encoding pipeline. funny_720p.mp4.
+    System Optimizations:
+        Speed optimizations: parallel video uploading:
+            Uploading video whole is inefficient. Split video into smaller chunks by GOP alignment.
+                Original Video(Client)-----Split by GOP alignment------>GOP1, GOP2....GOP n----->Original Storage
+            Allows fast resumable upload when previous upload fails. Job of splitting video file by GOP can improve by client to improve upload speeds.
+        Speed Optimizations: place upload centers close to users:
+            Improve upload speed by setting multiple upload centers across globe. People in US upload videos to North America upload centers.
+            China people upload to Asian upload centers. Achieve use CDNs as upload centers.
+        Speed Optimization: parallelism everywhere:
+            Achieve low latency requires effort. Optimization is to build losely coupled system and enable high parallelism.
+            Flow of how video transfer from original storage to CDN, Below flow show output depends on input of previous step.
+                Original storage---->Download module---->Encoding module----->Upload module----->Encoded storage---->CDN 
+            Use message queue to make it loosely coupled.
+                Befor message queue, encoding module must wait output of download module.
+                After message queue, encoding module not need to wait for output of download module. If events in message queue, encoding module can execute job in parallel.
+                Original storage  Download module     Encoding module    Upload module    Encoded storage      CDN
+                        |             |         |           |       |           |     |            |    |       |
+                         Message Queue          Message Queue       Message queue     Message queue     Message queue
+        Safety Optimization: pre-signed upload URL:
+            Safety important aspects of product. Ensure only authorized user upload video to right locations. Introduce pre-signed URLs.
+                    Original Storage<------upload video--------User 
+                                                                |   |
+                                                        Upload  |   |pre-signed URL 
+                                                                API servers 
+            Client makes HTTP request to API servers fetch pre-signed URL,which give permission to object identified in URL.
+            Pre-signed URL used by Amazon S3. Microsoft Azure blob storage support "Shared Access Signature".
+            API servers respond with pre-signed URL.
+            Once client receives response, upload video using pre-signed URL.
+        Safety Optimization: protect your videos:
+            Content makers reluctant to post videos online in fear original videos stolen. Protect copyright use:
+                Digital right managements(DRM): Major DRMs Apple FairPlay, Google Widevine, Microsoft PlayReady.
+                AES Encryption: Encrypt video and configure authorization policy. Encrypted video decrypted upon playback.
+                    Ensures only authorized user watch encrypted video.
+                Visual Watermarking:
+                    Image Overlay on top video contains identifying info for video. Can be company name or logo name.
+        Cost-saving Optimization:
+            CDN is crucial in our system. Ensures fast video delivery on global scale.
+            Its expensive, when data size large.
+            YouTube video streams follow long-tail distribution. Popular video accessed frequently but other have few or no viewers.
+            Optimizations:
+                Only serve most popular video from CDN and other from high capacity storage video servers.
+                Less popular video content, not store many encoded video versions. Short versions encoded on-demand.
+                Videos popular in certain regions. No need to distribute in other regions.
+                Build own CDNs like netflix and partner with ISPs Internet Service Providers. Building CDN is giant.
+                ISP can Comcast, AT&T, Verzion. ISPs located around globe and close Users. Partnering ISPs, improve viewing experience and reduce bandwidth.
+            All optimizations based on content popularity, user access pattern, video size.
+            Historical viewing pattern before doing any optimizations.
+    Error Handling:
+        Handle error gracefully and recover from them fast.
+            Recoverable error:
+                Video segment fails transcode, general idea to retry operations few times. If task continue fail and system not recoverable, return proper error code client.
+            Non-recoverable error:
+                malformed video format, system stop running task associated video and return proper error code client.
+            Upload error: retry few times.
+            Split video error: if older version client can't split GOP alignment, entire video passed server. Splitting job at server side.
+            Transcoding error: retry
+            Preprocessor error: regenerate DAG.
+            DAG scheduler error: reschedule task.
+            Resource manager queue down: use replica.
+            Task worker down: retry on new worker.
+            API server down: API server are stateless request will directed different API server.
+            Metadata cache server down: data replicated multiple times. If one node goes down, still access other nodes to fetch data.
+                Can bring up new cache server to replace dead one.
+            Metadata DB server down:
+                Master down: Promote one slaves act as new master.
+                Slave is down: Use another slave for read and bring up another DB server to replace dead one.
+
+Wrap Up:
+    Scale API tier:
+        API server stateless, scale them horizontally.
+    Scale the DB:
+        DB replication and sharding.
+    Live streaming:
+        Process of how video recorded and broadcasted in real time..
+        Similarity b/w live and non-live streaming: both require uploading, encoding, streaming.
+            Live streaming has higher latency, so need different streaming protocol.
+            Live streaming has lower requirement for parallelism because chunk of data already processed in real-time.
+            Live streaming require different sets of error handling. Error handling that takes too much time not acceptable.
+    Video takedowns:
+        Video that violates copyrights, pornography, other illegal acts shall removed.
+        Some discovered system during upload process, other discovered through user flagging.
+        
+
+
+
+
+
