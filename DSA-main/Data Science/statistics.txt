@@ -1,0 +1,87 @@
+Population
+    Collection of all item of interest N    
+Sample
+    Subset of population n.
+    Randomness and Representativeness.
+
+Descriptive Statistics:
+    Types of Data:  
+        Categorical: Mercedes, BMW, Audi
+            Frequency Distribution table, Bar chart, Pie Chart, Pareto Diagram
+            Gender
+        Numerical:
+            Frequency Distribution table, Histogram, SidebySide Bar Chart, Scatter Plot, 
+            Discrete
+            Continuous
+    Measurement Level:
+        Quantitative
+            Interval
+            Ratio
+        Qualitative
+            Nominal
+            Ordinal
+Inferential Statistics:
+    Distribution:
+        Normal: Also known as Gaussian  Zstats
+            Has bell curved, Mean=Median=Mode
+            N~(xmean,sigma^2)
+            Standardization: Changing mean to 0 and SD to 1.
+                Z=x-xmean/sigm/n^(1/2)
+                sigma: Population SD
+            Central Limit Theorm:
+                No matter underlying Distribution sampling Distribution approx normal.
+            Standard Error:Show how well approx true mean. sigm/n^(1/2)
+        Binomial
+        Uniform:
+            Discrete Uniform: All have equal chance to occur
+                Rolling one or two Die.
+        Student-T Distribution: For more than 30 sample use Z table
+            Inference through small sample.
+            Unknown population variance
+            Huge real life application
+            T=x-xmean/SD/n^(1/2)
+            SD sample SD
+        Confidential Intervals: commonly 95%
+            alpa b/w zero and one
+            point estimate-reliability factor*Standard error
+            Zstatistics
+            mean-zalpha/2*std error(sigma/n^(1/2)), mean+zalpha/2*std error(sigma/n^(1/2))
+            for 95% confidence alpha is 5%
+        Margin of error:
+            Range of confidence interval of S and T Distribution
+    Hypothesis Testing:
+        
+
+
+
+
+Mean: Simple average
+    population miu(u) sample Xbar
+    Easily affected by outlier
+Median: middle number
+Mode: most common prize
+No best but using only one is worst.
+Skewness: Measure of Asymmetry
+    Data is concentrated on one side.
+    Mean>Median +ve skew right
+    Mean=median=mode 0skew
+    mean<median -ve skew left
+Variance: Dispersion od set of data around mean
+    Population variance: sigma^2=(x-xmean)^2/N 
+    Dispersion is distance and can't be negative so square
+    Squaring amplifies the distance
+    Sample variance we divide by n-1 instead=S
+Standard Deviation:
+    sigma=((x-xmean)^2/N )^1/2
+Coefficient of Varition: SD related to mean
+    SD/mean
+    Comparing SD for two dataset not useful bot COV is 
+Covariance: Relation b/w two variables
+    sigma(x,y)=(x1-xmean)*(y1-ymean)/N
+    Sample n-1
+    >0 two var move together, <0 move opposite, =0 independent
+Coorelation:
+    Cov(x,y)/Std(x)*Std(y)
+    Casuality: Important to understand directions of casual relationships.
+    Disregard correlation below 0.2
+

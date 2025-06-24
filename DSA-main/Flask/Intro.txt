@@ -1,0 +1,20 @@
+Flask Framework Overview
+Flask vs Django
+Flask Application Structure
+Routing and URL Building
+Request and Response Handling
+Flask Templates and Jinja2
+Flask Forms and WTForms
+Flask Blueprints and Modular Applications
+Flask Extensions(Flask-SQLAlchemy, Flask-Migrate, Flask-Login)
+Database Integration with Flask
+Session Management and Cookies
+Flask Configuration and Environment variables
+Middleware and Request Lifecycle 
+Error Handling and Custom Error Pages
+Flask Restful APIs and API Development
+Authentication and Authorization in Flask
+Flask Testing and Debugging
+Deployment of Flask Applications 
+Flask Caching Techniques
+Security Best Practices in Flask

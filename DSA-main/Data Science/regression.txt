@@ -1,0 +1,67 @@
+Useful when we have cause effect relationship.
+
+Simple Linear Regression
+    Linear approx of casual relationship b/w two models.
+    For categorical data convert it into numerical data and then use it.
+    Methodology:
+        Get sample data 
+        Design model that work for sample data
+        Make prediction for whole population.
+        Y(Dependent/Predicted)=F(x1,x2,...)(Independent/predictors)
+        Y=B0+B1x1+E E=error, B0=constant B1=slope
+    Correlation vs Regression:
+        relationship vs one variable affect other
+        movement together vs cause and effect 
+        p(x,y)=p(y,x) vs one way 
+        single point vs line 
+    Library require: 
+        numpy, pandas, scipy, statsmodel.api, matplotlib, seaborn, sklearn
+        numpy: third party package allowing us to work with multidimensional arrays.
+        pandas: allows to organize data in tabular form and attach descriptive labels to rows and columns.
+        scipy: numpy+pandas+matplotlib
+        statsmodel: package built on NumPy and SciPy, integrates with pandas. Provides very good summaries.
+        matplotlib: 2D plotting library designed for visualization of NumPy 
+    Types of table:
+        Model summary, coefficient table and additional tests.
+        Coefficient and constant(B0), std err show accuracy, p-value below 0.005 is significant
+    Decomposition of variablility:
+        Sum of squares total=sum(i,n)(ydependent-ymean)^2=ssr+sse
+        Sum of squares regression=sum(i,n)(ypredicted-ymean)^2
+        Sum of squares errors=sum(ei^2)
+    OLS(Ordinary Least square):
+        Dependent variable, OLS(Model) min SSE, Generalized Least Squares, 
+        Maximum Likelihood Estimation, Bayesian Regression, Kernel Regression, Guassian process regression.
+    R Squared:
+        R^2=SSR/SST
+Multiple Linear Regression:
+    Y=B0+B1x1+B2x2+....Bkxk+E
+    Rdash^2=Adjusted R Square=Total variability explained by model
+    Better than Linear as each additional variable add explanatory power increase or same.
+    Rdash^2<R^2
+    F-Test:
+        Zstatistic: Normal Distribution
+        Tstatistic: student's t distribution 
+        Fstatistic: F Distribution
+        Lower F Statistics closer model is not significant.
+Assumption of regression:
+    Linearity:
+    No Endogeneity: Ommited variable Bias
+        sigma=0 where x,E
+    Normality and Homoscedasticity: Zero Mean
+        E~N(0,sigma^2)
+        if error term not distributed.
+        HomoscedasticityL Having equal variance
+        Prevention: Look for OVB, Look for outliers, Transformation
+    No autocorrelation:
+        no serial coorelation
+        Durbin Watson 0-4
+    No multicollinearity:
+        Fixes:
+            Drop one of two variables
+            Transform into one variable
+            Keep them both
+
+
+How to build Regression
+How to interpret it 
+How to compare different models

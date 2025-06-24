@@ -30,7 +30,7 @@ Variety, Velocity, Variablity, Veracity
                 Data Masking
 
 Data Science(Data + Model + Objective Function + Optimization Algorithm)
-Jobs: Data Scientist, Data Analyst, Machine Learning Engineer 
+Jobs: Data Scientist, Data Analyst, Machine Learning Engineer, Advacned Analytics
     Business Intelligence (Price Optimization, Inventory Management)
     Jobs: BI Analyst, BI Consultant, BI Developer
     SWOT as Qualitative Analysis
@@ -56,6 +56,34 @@ Jobs: Data Scientist, Data Analyst, Machine Learning Engineer
             k-means
             deep learning
         Reinforcement (Reward System)
+        Natual Language Processing(NLP)-->self-supervised learning
+            supervised-->language models(LLMs)+unsupervised 
+            Data-->Labels--->Data
+                Text Analysis
+                Label Generation
+                Content Generation 
+        Human Language Processing
+            translations
+            summarization
+            text classifications
+        LLMs 
+            Transformer: Process text by selectively focusing on relevant part of sequence at each step.
+            Attention Mechanism employed: self-attention.
+            Tokens: words or part of words.
+            
+Traditional AI 
+    Structured dataset to improve efficiency and accuracy in repetive task.
+Generative AI 
+    Generate new raw data content such as audio, text, code, image rely on pattern from training datasets.
+        Automated report generation.
+        Product Personalization
+        Product Analytics
+        Scenario Planning
+    Only to Generative AI 
+        Text Comprehension: Understand, inference and interpret written text.
+        Content Generation: Dall.e, OpenAI, Gemini
+        Artificial general Intelligence
+
 
 Programming Language 
     Python: All

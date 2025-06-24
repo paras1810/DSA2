@@ -77,20 +77,36 @@ Distributions:
             Y~Po(lambda)
             P(Y)=lambda^y.e^-y/y! e=euler's number or(2.72)
             E(y)=lambda= Both mean and s^2 called as elegant statistics.
-
     Continuous Distribution:
+        Not represent by table. represent by graph.
+        PDF: Probability distribution function. f(y)>=0 <--integral--derivative-->CDF
+        Probability of any individual is 0.
+        CDF: Cumulative Distrbution Function.F(y)=P(Y<=y)
+        Var(y)=E(y^2)-E(y)^2
+        Discrete CDFs
         Speed and Time: Probability distribution could be curve.
         Normal Distribution:
-            Polar Bears->350 500 700. Extreme are outliers.
+            Polar Bears->350 500 700. Extreme are outliers.Graph is bell shaped.
+            X~N(u,sig^2)
+            68(u-sig)-(u+sig), 95(u-2*sig)-(u+2*sig), 99.7(u-3*sig)-(u+3*sig) Law lie in mean - amount of Standard deviation
+            Transformation: Way to alter every element of transformation to new trasnformation like -+%*
+                If multiply graph shrink, divide graph expand, add left shift, subtract right shift.
+            Standardizing: Special type transformation Mean E(X)=0, SD Var(X)=1 Z=Y-u/sig 
         Student-Ts Distrbution:
-            Accomodate extreme value better. 
+            Accomodate extreme value better.Bell shaped and symmetric curve.
+            k degree of freedom Y~t(3) It has flatten tail
+            If K>2 E(Y)=u Var(Y)=S^2*K/k-2
         Chi-Squared:
             Asymetric. Only consist of non-symmetric value.
-            Does't show real life. Used in Hypothesis testing. Goodness of fit.
+            Does't show real life. Used in Hypothesis testing. Goodness of fit. Few events in real life.
+            Y=Chi^2(k) Graph highly skewed right. E(X)=k, Var(X)=2*k
         Exponential Distribution:
             Event rapidly changing on
+            Exp(lam) Exp(1/2) Youtube views. lam->rate param
         Logistic Distribution:
             Forecast Analysis. Never reach true certainity. How much game necessary to predict victory.
+            Log(u,S) S-Scale param
+            E(Y)=u, Var(Y)=S^2pi^2/3
 
             
 

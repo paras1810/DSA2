@@ -1,0 +1,45 @@
+This used to discover nearby places restaurant, hotels, mueseums etc.
+Find best nearby restaurants or finding k-nearest stations on Google Maps.
+
+Design Scope:
+    Search radius, system expand search radius: Businesses within specific radius.
+    Reasonable assumption: 20KM
+    Search Radius: 0.5Km, 1Km, 2Km, 5Km, 20Km.
+    Business can be added next day. Moving speed slow don't need constantly refresh page.
+    Functional:
+        All business based on user location(latitude and longitude) and radius.
+        Customer can view detail about business.
+    Non-Functional:
+        Low Latency: View nearby business quickly.
+        Data Privacy: Location Based Service(LBS) user privacy into consideration. GDPR(General Data Protection Regulation)
+        High availability and scalability: Handle spike in traffic during peak hours.
+    Back of Envelope:
+        DAU: 100million
+        Businesses: 200million 
+        Sec in days: 10^5 5search query/day.
+        Search QPS: 100million*5/10^5=5000
+
+Propose High-level Design:
+    API Design:
+        Get /v1/search/nearby/
+        Pagination is not focus.
+        Request Parameter:(latitude, longitude, radius=5Km)
+        {"total":10, "businesses":[{business object}]}
+        Additional attribute such pictures, reviews, star ratings render business details.
+        GET /v1/business/:id Business info.
+        POST /v1/business Add business 
+        PUT /v1/business/:id Update details business.
+        DELETE /v1/business/:id Deleet business 
+        Example: Google Places API, Yelp business.
+    High-level design:
+    Algorithm to find nearby businesses:
+    Data model:
+        Read/Write Ratio
+            Read volume high because nearby business and View details info of business.
+            Read heavy system MySQL good fit.
+            Write volume low adding, removing and editing infrequent.
+        Data Schema:
+            Key DB table business table and geospatial index table.
+            
+
+
