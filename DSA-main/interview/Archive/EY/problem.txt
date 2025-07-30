@@ -1,0 +1,84 @@
+Apple SCI:
+
+            Apple Products (6 categories i.e iphone, ipad, mac, earbuds,..)
+                            /\
+                           /  \
+                BAU  (Regular)               NPI( New Products)
+
+            CPT Capcaity planning:
+                CPT: Global Level (Asia-Pacific, Euro, AMerica)
+                DC-CPT Country Level 
+                OB-CPT District
+
+Functionality:
+    User can upload data related to SCI.
+    Predict data how much supply come:
+        Stratery: 52week, 1month, 3 week.
+    User can add, delete or modify lookup tables i.e. for country, product, quantity.
+        Validations:
+            Multithreading for various columns in Python 
+
+                    User End Level(desktop application)
+                            |
+                            |
+                        Java Layer( Use for connecting frontend and backend)
+                            |
+                            |
+                        Either in Python or PL/SQL.
+                            |
+                            |
+                        Django Framework
+                            |
+                        manage.py 
+                            |
+                            |
+                        settings.py 
+                            |
+                            |(middlewares, apps, authentication rules)
+                            Apps included( SProut upload, delete, validation)---->DC-CPT, OB-CPT 
+                        urls.py 
+                            |
+                            |
+                        views.py (Logic return here )
+                            |
+                            |
+                            models.py
+
+Mercedes:
+        Flask application(Deanonymication ):
+            |
+            |
+        Dockerize the environment for app 
+            |
+            |
+        Kubernetes CLuster 
+            |
+        secrets.yaml, environment.yaml,.......
+
+Data Pipelines 
+    |
+    |
+Passwords, File passwords, secrets
+    |
+    |
+Kubernetes Secrets
+
+Data Pipelines-->Flyte : Orchestration of Workflows by taking Kubernetes node from GKE.
+
+Cluster--->Nodes---->Pods--->Container--->Docker Image
+
+Deanonymication: Hiding the facial features of data coming from various region of globe due to complicance region 
+    of countries.
+
+JWT token: Header+Payload+Signature:
+
+Username and password coming I have encrypted using werkzeug library:
+
+First is authorization+authentication
+
+Authorization is based on JWT token correct username and password that indicate user is valid for using app.
+
+Authntication inside the payload a key is coming for each .png images also known as Deanonymication key.
+This key is encrypted using werkzeug and stored in Kubernetescluster dictionary.
+
+Deanonymization Library: Image recognition based ML library which will decrypt our images and show the hidden features.

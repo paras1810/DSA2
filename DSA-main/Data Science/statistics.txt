@@ -50,7 +50,35 @@ Inferential Statistics:
         Margin of error:
             Range of confidence interval of S and T Distribution
     Hypothesis Testing:
-        
+        Formulate Hypothesis
+        Find right test 
+        Execute test 
+        Make Decision
+        Null: H0
+            We assume its true and try to prove otherwise.
+            Status Quo
+        Alternate: H1 or HA
+            Change or Innovation
+        Significance Level:
+            Cold Drink in bottle more significant than cold drink one drinks.
+            Scale it to Z.
+            Check if Z in rejection region.
+        Type I vs Type II Error.
+            Type 1:
+                Reject true null hypothesis.
+                False positive
+            Type II:
+                False Negative 
+            p=1-alpha Power of test
+        Test for Single and Multiple Population:
+    p-value:
+        Smallest level of Significance at which we can reject null hypothesis.
+        p-value<alpha Reject otherwise accept
+        Most stats use for each test
+            
+
+
+
 
 
 

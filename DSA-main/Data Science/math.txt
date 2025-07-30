@@ -108,6 +108,23 @@ Distributions:
             Log(u,S) S-Scale param
             E(Y)=u, Var(Y)=S^2pi^2/3
 
+type(10) #int 
+int(5.0)
+float(5)
+str(500)
+max(10,20,30)
+min(10,20,30)
+abs(-10)
+sum([1,2,3,4])
+round(3.555,2)
+round(3.2)
+pow(2,10)
+len('Mathematics')
+arr.index(ele)
+arr.sort(reverse=True)
+math.sqrt(16)
+
+
             
 
 

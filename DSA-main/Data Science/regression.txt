@@ -60,7 +60,32 @@ Assumption of regression:
             Drop one of two variables
             Transform into one variable
             Keep them both
+Linear Regression-sklearn 
+    scikit=Numpy+Scipy+matplotlib 
+        Very fast and efficient
+        Preferred working with arrays 
+    Pandas DataFrame Numpy ndarray 
+    Use feature word instead of variable
+    sklearn is optimized for multiple linear  regression.
+    Calculate R-squared:
+        how linear regression fair and compare
+    F-regression:
+        feature_selection.f_regression
+    Feature Scaling-Standartization or Normalization:
+        Making mean=0 and SD=1
+    Feture Selection through Standartization of weights:
+        Weights is word for coefficients
+    Overfitting vs Underfitting:
+        Focussed on particular training so much it has missed point.
+        Model has not captured underlying logic of data.
+    Train-Test Split:
+        
+    
 
+        
+    Supervised
+    Unsupervised
+    Reinforcement
 
 How to build Regression
 How to interpret it 
