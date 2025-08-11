@@ -1,0 +1,11 @@
+List vs Set
+Decorator
+Generator vs Iterator
+Basic app in Flask
+Model Creation in Django
+AWS Stateless Lambda vs Google Cloud Function
+AWS EC2 vs Google Cloud Engine
+Write code for Flatten list 
+Pytest Fixtures
+Unittest
+Data Structure and Data type in python.
