@@ -62,6 +62,51 @@ new_data_scaled = scaler.transform(new_data)
 
 from sklearn.model_selection import train_test_split
 a=np.arange(1,101)
+a_train, a_test = train_test_split(a, test_size=0.2, shuffle=False)
+a_train.shape, a_test.shape
+# Random number Default 75:25 split.
+
+#Car Sales Data Code:
+raw_data = pd.read_csv('1.04. Real-life example.csv')
+raw_data.head()
+
+# Preprocessing
+## Exploring the descriptive statistics of the variables
+raw_data.describe(include='all')
+data = raw_data.drop(['Model'],axis=1)
+data.isnull.sum()
+data_no_mv=data.dropna(axis=0)
+sns.distplot(data_no_mv['Price'])
+
+#For removing the outliers
+q=data_no_mv['Price'].quantile(0.99)
+data_1 = data_no_mv[data_no_mv['Price']<q]
+data_cleaned = data_1.reset_index(drop=True)
+
+#Checking OLS assumptions:
+sns.distplot(data_cleaned['Price'])
+np.log(x) = np.log(data_cleaned['Price']) #No Endogenity
+# Normality and Homoscedasticity
+# No autocorrelation 
+cols = data_cleaned.columns.values
+#VIF Variance inflation factor
+data_no_multicollinear = data_cleaned.drop(['Year'], axis=1)
+# Create dummy variables:
+data_with_dummies = pd.get_dummies(data_no_multicollinear, drop_first=True)
+data_preprocessed = data_with_dummies[cols]
+
+# Declare inputs and targets
+targets=data_preprocessed['log_price']
+inputs = data_preprocessed.drop(['log_price'], axis=1)
+scaler1=StandardScaler()
+scaler1.fit(inputs)
+input_scaled=scaler1.transform(inputs)
+  
+
+## Determining the variables of interests
+
+## Dealing with missing values
+
 
 
 

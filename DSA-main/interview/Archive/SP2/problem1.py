@@ -1,3 +1,4 @@
+'''
 #1
 x=[10,20,30]
 y={x:10
@@ -7,11 +8,12 @@ print(y)
 #2
 def method_var(x, *args, **kwargs):
     print(x)
+'''
 
 #3
 def validate(func):
     def wrapper(a, b):
-        if type(a)!=int and type(b)!=int:
+        if type(a)!=int or type(b)!=int:
             print("Type of both a and b should be int")
             return 0
         return func(a, b)
@@ -21,8 +23,9 @@ def sum(a, b):
     return a+b
 
 print(sum("str",10))
-x=sum(5,10)
+print(sum(5,10))
 
+'''
 #4
 x="Paras"
 x=""
@@ -69,3 +72,4 @@ def flat_list(input_list):
         
 flat_list([1,[2, [3, 4]]])
 print(result_list)
+'''

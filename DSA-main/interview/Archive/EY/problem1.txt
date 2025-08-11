@@ -1,0 +1,40 @@
+Different countries has different compliance for facial features like which are needed to hide and which are needed to show
+Like in case of China storing faces are not allowed on GCP or any other US based cloud 
+Original Image: Anonymized Image(This is original image with all facial features hidden) image  and Residual Image(3-5) zip file
+encrypted with a anonymization key
+Flask based application for deanonymization 
+
+How the request looks POST
+http://0.0.0.0/5002/deanonymization
+Bearer Token: JWT token(Payload+Header+Signature)  Header we basic info of username and password(encrpyted using werkzeug technique)
+Payload: carrrecording_id and deanonym_key(encrpyted using werkzeug technique)
+Json Body: {
+    anonym_path:"bucket path for anonoymized image",
+    residual_path:"bucket path for residuals file",
+    annotator_path:"path for storing original image"
+}
+
+    Step 1: Check for all requirements like carrrecording_id, deanonym_key, all_the_paths
+        1.1: Then it will return 400 code and Json message for parameter missing in request.
+    Step 2:
+        Then it will check for correctness of anonoym_path and residual_path and check deanonym_key after decryption
+    Step 3: 
+        It will call for deanonym library that will combine the anonym_path+residuals_path and create original image
+        It will also store logs for carrecording and user who has created this image in DB.
+        DB used in MSSQL
+        3.1 If anything break like key not correct or inside library or something failed in DB
+            Through that error in Json response with 500 error codes define
+        3.2 If everything work in happy flow it will return original image for annotation or labelling.
+            
+Key Optimizations:
+    In one request insted of one image upto 150 images can be passed 
+    for calling deanonymization library multiprocessing has implemented
+            time has been comapred using multiprocessing module of Python vs Ray solution 
+    Directly converting output_image in webp format instead of .png which reduce result size to 10% as well as speed 
+    
+Whole application is Dockerize and Docker image in store in GCP artifactory.
+GKE cluster supporting or providing Kubernetes are used for hosting application
+    deployment.yaml
+    services.yaml
+    security.yaml has been created and deployed in server for running the application inside Kubernetes cluster.
+ALso the key passwords saved for KubernetesSecrets 

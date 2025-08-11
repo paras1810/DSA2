@@ -90,3 +90,11 @@ Linear Regression-sklearn
 How to build Regression
 How to interpret it 
 How to compare different models
+
+Real World Problems:
+    Car Sale Data:
+        Clean Data
+        Relax Assumptions
+        Log Transformations
+        Create a model
+        Create dummies
