@@ -1,0 +1,30 @@
+Logistic Regression:
+    Non-linear models:
+        quadratic
+        exponential
+        logistic 
+
+Logistic Regression: Categorical instead of numerical
+    Predict probability of an event occuring
+    Gives result in 0 and 1
+    p(x)=e^(B0+B1x1+...Bkxk)/1+e(B0+B1x1+...Bkxk)
+Logit Regression Model
+    p(x)/1-p(x)=e^(B0+B1x1+...Bkxk)
+Build Logistic Regression:
+    Method: MLE Maximum Likelihood estimation
+        Func which estimates how likely model hand describes real relation of variables.
+        Bigger likelihood, higher probability model is correct.
+    Log-likelihood: Bigger it is good. Mostly negative.
+    LL-Null: log likelihood of model with no independent variables.
+    Pseudo-R squared: AIC, BIC, McFaddens R-squared(Good b/w 0.2 aND 0.4)
+Binary Predictors in Logistic Regression:
+Underfitting and Overfitting in Logistic Regression:
+    Opposition of accuracy is misclassification rate
+SAT-Admissions
+
+Assumptions:
+    Linearity
+    No Endogenity
+    Normality and Homoscedasticity
+    No autocorrelation
+    No multicollinearity

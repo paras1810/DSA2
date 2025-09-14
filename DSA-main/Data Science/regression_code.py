@@ -101,6 +101,11 @@ inputs = data_preprocessed.drop(['log_price'], axis=1)
 scaler1=StandardScaler()
 scaler1.fit(inputs)
 input_scaled=scaler1.transform(inputs)
+y_hat_test="Test results"
+
+df_pf=pd.DataFrame(np.exp(y_hat_test), columns=['Prediction'])
+df_pf.describe()
+
   
 
 ## Determining the variables of interests

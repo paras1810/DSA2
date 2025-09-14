@@ -47,11 +47,13 @@ Jobs: Data Scientist, Data Analyst, Machine Learning Engineer, Advacned Analytic
         Time Series
     Machine Learning (Fraud Detection, Client Retention)
         Supervised (Labelling + )
-            SVM Support Vector Machine
-            NN Neural networks
-            deep Learning
-            random forests
-            bayesian networks
+            Classifiaction
+                SVM Support Vector Machine
+                NN Neural networks
+                deep Learning
+                random forests
+                bayesian networks
+            Regression
         UnSupervised
             k-means
             deep learning
@@ -99,3 +101,82 @@ Software
     PowerBI, sas, Qlikq, tableau: BI 
     Eview, Stata: Traditional Data Science 
     Microsoft Azure, rapidminer: Machine learning
+
+Role of ChatGPT:
+    Data Analysis Lifecycle
+        Exploring Data Analysis 
+        Preprocessing
+        Data Analysis 
+        Visualizations
+        Interpretation
+    RFM Analysis on Data:
+        Recency, Frequency, Monetary
+    ChatGPT EDA 
+        Exploratory Data Analysis
+        Correlation Matrix and Outlier:
+    Hypothesis Testing:
+        H0-->Null Hypothesis
+        H1-->Alternate Hypothesis 
+        T-tests
+        p-tests
+        Leveance test for equal variance if two group 
+    RegEx:
+        Preprocessing, Cleaning, Analyzing 
+        Adding or removing text based on pattern 
+        Text Validation
+    Algo recommendation for data analysis 
+    Algo recommendation for recommendation engine 
+    Ethical principle in data utilizations
+        Data Security and Data Bias
+
+Train Naive Bayes Classifier with Chatgpt for sentiment:
+    Sentiment: Analyzing text discern emotion or sentiment.
+    Our Data: User feedback on course and star rating.
+    Steps:
+        Uploading and Preprocessing 
+        EDA 
+        RegeX
+        ML with Naive Bayes 
+            Training 
+            Testing 
+            Fine Tuning 
+        Model evaluation with Validation test 
+            Accuracy, Precision, Recall, f1 score
+    Naive Bayes:
+        Specifically used for text based. i.e. Mail is spam or not(ham problem) 
+        Algorithm assumes feature are independent.
+        Multinomial Naive Bayes 
+            Frequency of word is used as feature.
+        Bernoulli Naive Bayes 
+            Used for binary/boolean features.
+        P(A|B) = P(B|A)*P(A)/P(B)
+        P(spam)=30%
+        P(win|spam)=50%
+    Tokenization and Vectorization:
+        Converting sequence of text into smaller parts known as tokens.
+        Getting vectors out of these words as bag of words.
+            vectorizer = TfidfVectorizer(stop_words='english')
+    Imbalanced Data Sets:
+        Data set with skewed class proportions.
+        Resampling: Modify original dataset create new dataset with more balance class distribution.
+            Oversampling increase minority class.
+        SMOTE generates new synthetic samples in minority class from slight changes in data points.
+        Weighted Classes: assign different class weight.
+        Data Augmentation: technique generate new data from existing.
+    Optimizing Data:
+        Handling missing values 
+        Correlation Analysis
+        Text analysis of reviews
+    Steps:
+        Preprocessing
+        Feature Extraction: Bag of Words, TF-IDF, dimensionality reduction or feature selection.
+        Label Preparation: 
+
+Model:
+    Analytical tool to solve business problem.
+Module:
+    s/w component containing code that help execute model.
+
+        
+
+

@@ -1,0 +1,23 @@
+API: contract allowing s/w share data with each other.
+    Collection of endpoints which developer can attach, extract specific information can used by those whose working with apps.
+    Act like messenger b/w end user of apps and servers.
+    Like gateway to servers. Bridge between two pieces of s/ws.
+    Limitations:
+        API does require maintenance
+        security: must act as filter.
+        private information.
+Software: can be written in hundred of programming languages.
+    Different pieces of s/w communicates through text files.
+
+Server: Combination of h/w and s/w resposible for storing, managing and processing large amount of data.
+    web servers, DB servers, FTP servers
+    Client(browser)----server model(web server)
+Data: Information in forms of symbols-1s, 0s, digits, letters, special characters.
+    Collected, measured, analyzed, processed further.
+Data Connectivity: ability to connect clients and servers, securing swift and voluminous transaction b/w them.
+Data Asset: Data that is expected to have some value in future.
+    Intellectual property, Databases, websites, 
+Programming: Refer to function app performs.
+Integration:
+    
+

@@ -1,0 +1,130 @@
+Major type of ML:
+    Supervised
+    Unsupervised
+    Reinforcement
+Building Bloc of ML:
+    Data 
+        Historical Data
+    Model
+        Blackbox: Take input and give output.
+        xw+b=y--->Model
+        ti-->target
+        L(y,t)->Loss
+        C(y,t)->COst 
+        E(y,t)->error
+    Objective Func 
+        Data-fed->Model-obtain->Output
+        Measure used to evaluate how well model output match desired corrected values.
+            Loss: Lower loss higher level of accuracy. In supervised learning.
+                Regression: L2-norm = OLS in stats(Euclidean distance of output and target)
+                    Output is number.
+                Classification: Cross-Entropy L(y,t)=-sum(rlny)
+                    Categories: Cat, Dog
+
+            Reward: Higher reward higher accuracy. In reinforcement learning.
+    Optimization Algorithm:
+        Gradient Descent/1-Parameter Gradient Descent::
+            f'(x)=delta(Fx)
+            n(eta)->Learning rate
+            oscillation-->repetive variation around central value.
+        n-Parameter Gradient Descent:
+            xiw+b=yi-->ti
+            loss:L(y,t)=L2-norm/2=sum(yi-ti)^2/2
+            xi+1=xi-eta*gradient(f'xi)
+            
+
+Training the model:
+    K inputs
+    M Outputs
+    K*M Weights
+    M Biases
+    Y1Y2=X1X2+2*2 weights+2Biases
+
+Graphical Representation of Simple Neural networks:
+
+Tensorflow:
+    Layer:
+        Linear+Non-Linear combinations->Outputs i.e sigmoid=sig(x)=1/1+e^(-x)
+        This makes a layer.
+    Deep net:
+        inputlayer-->Hiddenlayer-->Hiddenlayer-->Outputlayer-->target 
+        Building block of hidden layer are hidden units or nodes.
+        Hyperparameters: Width, Depth, learning rate(eta)
+        Parameters: Weights(W) and Biases(b)
+    Non-Linearity needed to break linearity and represent more complicated relationship
+    Two consecutive linear transformations are equal to one.
+    Non-Linearities-->Stacking Layers-->Depth-->Deep Learning
+    Activation Functions: Another name for non-Linearities.
+        Name    Formula     Derivative      Graph       Range
+        sigmoid     1/1+e^(-a)  sig(a)(1-sig(a))    (0,1)
+        TanH hyberpolic tangent  e^a-e^-a/e^a+e^-a  (-1,1)
+        ReLu  rectified linear unit max(0,a)        (0,inf) 
+        softmax     e^(ai)/sum(e^aj)                (0,1)
+    BackPropogation:
+        x1, x2----->h1, h2, h3----->y1, y2---->t1, t2
+        weights that have contribution to error by more.
+    Overfitting:
+    Training, Validation and test 
+        For train and valid loss functions should be calculated similar.
+        80, 10, 10 or 70, 20, 10 generally used.
+    N-Fold or k-Fold CROSS-Validation:
+    Early Stopping:
+        Preset number of epochs
+            Pros: Solves problem
+            Cons: No guarantee min is reached. Doesn't minimize at all.
+        Loss reduce with time and start becoming constant.
+    Initialization:
+        Initialize variables
+        Xavier-Glorot Initialization:
+            Uniform: Each weight from random uniform distribution [-x,x] x=6/(in+out)^(1/2) 
+            Normal: weight from normal distribution with mean=0 and SD=2/(in+out)^(1/2)
+        
+Stochastic Gradient Descent:
+    This is closely related to batching.
+    Process of splitting data in batches(mini-batches)
+    CPUs and GPUs train different batches simultaneously.
+    Problem with Gradient Descent:
+        GD pitfalls. Local impostor(local minimum)
+    Momentum:
+        w<-w-eta(delL/delW)-alpa*eta(delL/delw)(t-1)
+
+Learning Rate Schedules:
+    Small enough
+    Big enough
+    Exponential Schedule
+    Adaptive Learning Rate(AdaGrad and RMSprop):
+        AdaGrad Adaptive Gradient Algorithm
+        Smart, Based on training itself.
+        RMSprop: Root mean square propagation
+    Adam(Adaptive Moment Estimation):
+
+Preprocessing:
+    Compatibility, Order of magnitude
+    Relatives: Time series data 
+    Standardization:
+        Feature Scaling or Normalization
+        L1 and L2 norm
+    PCA Principal component analysis: Followed by Whitening
+        Dimension reduction technique combine several variables into bigger variable.
+
+Encodings:
+    One-hot encoding: Three columns for three variables
+        For 16k product need 16k columns
+    Binary Encoding: Converting into binary numbers
+        For 16k only 16 columns needed
+
+MNIST Dataset:
+    70k handwritten digits
+    28*28=784 pixels for each images.
+    Input Layer--Hidden Layer-->Output Layer(Softmax)
+    
+
+
+
+
+
+
+
+
+
+        

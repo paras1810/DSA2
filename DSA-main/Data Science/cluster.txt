@@ -1,0 +1,67 @@
+Cluster Ananlysis:
+    A multivariate statistical technique groups observation on basis some of variabes and features described by.
+    Goal is maximize similarity between cluster and maximize dissimilarity between cluster.
+
+Several Clustering Problems
+    Market Segmentation
+        Scatter plot
+        Customer on basis of spenditure and age
+        Countries on basis of location and language
+    Image Segmentation
+Classifiaction vs Clustering
+    Supervised Learning(labelled data)
+        Regression: Linear
+        Classification: Logistic
+            Naive Bayes 
+    Unsupervised Learning:
+        Clustering: K-Means
+            Distance b/w two points and centroid
+            Eucledian distance: ((x2-x1)^2+(y2-y2)^2+(z2-z1)^2....n)^(1/2)
+            Centroid or Centre of Mass
+K-Means
+    Chose number of cluster
+    Specify cluster seeds (Basically started centroid)
+    Assign each point to centroid.
+    Adjust centroids.
+    Cons:
+        Finding K Soln: Elbow method
+        Sensitive to initialization k-means++
+        Sensitive to outliers  Remove outliers
+        Produce spherical solutions
+    Useful:
+        Exploratory
+            Get acquinated with data
+            Search for patterns
+            Plan
+        Confirmatory
+            Explain phenomenon
+            Confirm hypothesis
+            Validate previous research
+        Explanatory
+    Standardization
+    Relation between clustering and regression:
+
+Market Segmentation:
+
+How to perform cluster Ananlysis
+How to find optimal number of clusters
+    minizing distance between points in cluster. Wcss (Within cluster sum of squares)
+    Where wcss stop decreasing fastly.
+    maximizing distance between clusters.
+How to identify appropriate features
+How to interpret results
+
+Types of Clustering:(psycology, intelligence, others)
+    Flat 
+        K-Means 
+    Hierarchical
+        Agglomerative(Bottom-Up)
+            Dendogram
+                Where to draw line? Number of connection broke are equals to number of cluster formed.
+                Ward method 
+        Divisive (Top-Down)
+Heatmap
+    -1.6 to 1.6
+    From white to black
+
+
